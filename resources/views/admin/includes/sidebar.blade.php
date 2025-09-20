@@ -28,7 +28,7 @@
                             </g>
                         </svg>
                     </span>
-                    <h2 class="brand-text">APNA MAZDOOR</h2>
+                    <h2 class="brand-text">{{ env('APP_NAME') }}</h2>
                 </a></li>
             <li class="nav-item nav-toggle"><a class="nav-link modern-nav-toggle pe-0" data-bs-toggle="collapse"><i class="d-block d-xl-none text-primary toggle-icon font-medium-4" data-feather="x"></i><i class="d-none d-xl-block collapse-toggle-icon font-medium-4  text-primary" data-feather="disc" data-ticon="disc"></i></a></li>
         </ul> -->
@@ -36,10 +36,10 @@
     <li class="nav-item me-auto">
         <a class="navbar-brand d-flex align-items-center" href="{{ route('admin.category') }}" style="gap: 10px;">
             <!-- Logo Icon -->
-            <img src="{{ asset('images/final_logo.png') }}" alt="Apna Mazdoor Logo" style="height: 71px; width: auto;  margin-left: 47px;">
+            <img src="{{ asset('images/final_logo.png') }}" alt="{{ env('APP_NAME') }} Logo" style="height: 71px; width: auto;  margin-left: 47px;">
 
             <!-- Logo Text -->
-            <!-- <h2 class="brand-text mb-0" style="font-size: 16px;margin: 0;margin-left: -41px;">APNA MAZDOOR</h2> -->
+            <!-- <h2 class="brand-text mb-0" style="font-size: 16px;margin: 0;margin-left: -41px;">{{ env('APP_NAME') }}</h2> -->
         </a>
     </li>
 </ul>
@@ -53,7 +53,11 @@
             </li> --}}
             <li class=" navigation-header"><span data-i18n="Apps &amp; Pages">Modules</span><i data-feather="more-horizontal"></i>
             </li>
-            <li class=" nav-item {{ request()->routeIs('admin.category') ? 'active' : '' }}"><a class="d-flex align-items-center"href="{{ route('admin.category') }}"><i data-feather='corner-down-right'></i><span class="menu-title text-truncate" data-i18n="Categories">Categories</span></a>
+            <li class="nav-item {{ request()->routeIs('admin.guardians.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('admin.guardians.index') }}">
+                    <i data-feather='corner-down-right'></i>
+                    <span class="menu-title text-truncate" data-i18n="Guardians">Guardians</span>
+                </a>
             </li>
         </ul>
     </div>

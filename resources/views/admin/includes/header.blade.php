@@ -9,7 +9,7 @@
     <meta name="description" content="A comprehensive dashboard for managing labour and client bookings. Monitor statuses, handle transactions, and streamline operations effectively.">
     <meta name="keywords" content="labour bookings, client bookings, labour management, client management, booking dashboard, responsive admin template">
     <meta name="author" content="FBTech">
-    <title>Apna Mazdoor Dashboard</title>
+    <title>{{ env('APP_NAME') }} Dashboard</title>
     <link rel="apple-touch-icon" href="../../../app-assets/images/ico/apple-icon-120.png">
     <link rel="shortcut icon" type="image/x-icon" href="../../../app-assets/images/ico/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500;1,600" rel="stylesheet">

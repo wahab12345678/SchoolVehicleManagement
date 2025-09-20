@@ -12,7 +12,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login.post'); // Post login request
 });
 
-Route::middleware(['role:admin'])->group(function () {
+Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
         Route::prefix('category')->group(function () {
@@ -25,5 +25,6 @@ Route::middleware(['role:admin'])->group(function () {
             Route::post('/change-visibility', [\App\Http\Controllers\Admin\CategoryController::class, 'toggleVisibilityStatus'])->name('categories.change-visibility');
             Route::get('/edit/{id}', [\App\Http\Controllers\Admin\CategoryController::class,  'edit'])->name('categories.edit');
         });
+        Route::resource('guardians', App\Http\Controllers\Admin\GuardianController::class)->names('admin.guardians');
     });
 });

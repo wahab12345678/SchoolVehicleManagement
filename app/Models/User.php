@@ -46,4 +46,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function guardian()
+    {
+        return $this->hasOne(Guardian::class);
+    }
 }
