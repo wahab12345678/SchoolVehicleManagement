@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('registration_no')->unique();
-            $table->foreignId('parent_id')->constrained('users')->onDelete('cascade'); // parent is a user
+            $table->foreignId('parent_id')->constrained('guardians')->onDelete('cascade'); // parent is a guardian
             $table->timestamps();
         });
     }

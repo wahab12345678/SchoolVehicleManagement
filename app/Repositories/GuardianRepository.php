@@ -15,21 +15,30 @@ class GuardianRepository
     public function create(array $data)
     {
         // Create User
+        // If password not provided, generate a random one and notify admin later
+        $plainPassword = $data['password'] ?? null;
+        if (!$plainPassword) {
+            $plainPassword = substr(bin2hex(random_bytes(4)), 0, 8);
+        }
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
-            'password' => Hash::make($data['password']),
+            'password' => Hash::make($plainPassword),
         ]);
 
         $user->assignRole('parent'); // spatie role
 
         // Create Guardian
-        return Guardian::create([
+        $guardian = Guardian::create([
             'user_id' => $user->id,
             'cnic' => $data['cnic'] ?? null,
             'address' => $data['address'] ?? null,
         ]);
+
+        // Load relation for immediate use
+        return $guardian->load('user');
     }
 
     public function update(Guardian $guardian, array $data)

@@ -21,10 +21,53 @@ class GuardianController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $guardians = $this->repository->all();
-        return view('admin.guardians.index', compact('guardians'));
+        if ($request->ajax()) {
+            // Only include guardians whose user has role 'parent'
+            $guardians = Guardian::with('user')->whereHas('user', function ($q) {
+                $q->whereHas('roles', function ($r) {
+                    $r->where('name', 'parent');
+                });
+            })->get();
+
+            // If Yajra DataTables is available use it, otherwise return a plain JSON
+            // structure that client-side DataTables can consume (the 'data' key).
+            if (class_exists('\\Yajra\\DataTables\\Facades\\DataTables')) {
+                return \Yajra\DataTables\Facades\DataTables::of($guardians)
+                    ->addColumn('action', function($row){
+                        $btn = '<button data-id="'.$row->id.'" class="btn btn-info btn-sm view-guardian"><i class="fa fa-eye"></i></button> ';
+                        $btn .= '<button data-id="'.$row->id.'" class="btn btn-primary btn-sm edit-guardian"><i class="fa fa-edit"></i></button> ';
+                        $btn .= '<button data-id="'.$row->id.'" class="btn btn-danger btn-sm delete-guardian"><i class="fa fa-trash"></i></button>';
+                        return $btn;
+                    })
+                    ->rawColumns(['action'])
+                    ->make(true);
+            }
+
+            // Fallback: manually build the array expected by client-side DataTables
+            $data = $guardians->map(function ($row) {
+                $name = optional($row->user)->name ?? '';
+                $email = optional($row->user)->email ?? '';
+                $btn = '<button data-id="'.$row->id.'" class="btn btn-info btn-sm view-guardian"><i class="fa fa-eye"></i></button> ';
+                $btn .= '<button data-id="'.$row->id.'" class="btn btn-primary btn-sm edit-guardian"><i class="fa fa-edit"></i></button> ';
+                $btn .= '<button data-id="'.$row->id.'" class="btn btn-danger btn-sm delete-guardian"><i class="fa fa-trash"></i></button>';
+
+                return [
+                    'id' => $row->id,
+                    'name' => $name,
+                    'email' => $email,
+                    'phone' => $row->phone ?? '',
+                    'cnic' => $row->cnic ?? '',
+                    'address' => $row->address ?? '',
+                    'action' => $btn,
+                ];
+            })->toArray();
+
+            return response()->json(['data' => $data]);
+        }
+
+        return view('admin.guardians.index');
     }
 
     /**
@@ -47,9 +90,14 @@ class GuardianController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Guardian $guardian)
     {
-        //
+        if (request()->ajax()) {
+            $guardian->load('user', 'students');
+            return response()->json($guardian);
+        }
+
+        return view('admin.guardians.show', compact('guardian'));
     }
 
     /**
@@ -57,6 +105,11 @@ class GuardianController extends Controller
      */
     public function edit(Guardian $guardian)
     {
+        if (request()->ajax()) {
+            $guardian->load('user');
+            return response()->json($guardian);
+        }
+
         return view('admin.guardians.edit', compact('guardian'));
     }
 
@@ -66,7 +119,12 @@ class GuardianController extends Controller
     public function update(UpdateGuardianRequest $request, Guardian $guardian)
     {
         $this->repository->update($guardian, $request->validated());
-        return redirect()->route('admin.guardians.index')->with('success', 'Parent updated successfully.');
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Guardian updated successfully']);
+        }
+
+        return redirect()->route('admin.guardians.index')->with('success', 'Guardian updated successfully.');
     }
 
     /**
@@ -75,6 +133,11 @@ class GuardianController extends Controller
     public function destroy(Guardian $guardian)
     {
         $this->repository->delete($guardian);
-        return redirect()->route('admin.guardians.index')->with('success', 'Parent deleted successfully.');
+
+        if (request()->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Guardian deleted successfully']);
+        }
+
+        return redirect()->route('admin.guardians.index')->with('success', 'Guardian deleted successfully.');
     }
 }

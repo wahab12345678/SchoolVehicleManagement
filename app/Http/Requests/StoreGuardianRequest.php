@@ -25,7 +25,8 @@ class StoreGuardianRequest extends FormRequest
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
-            'password' => 'required|min:6|confirmed',
+            // Make password optional so UI can omit it; if provided it must be confirmed
+            'password' => 'nullable|min:6|confirmed',
             'cnic' => 'nullable|string|max:15',
             'address' => 'nullable|string|max:255',
         ];

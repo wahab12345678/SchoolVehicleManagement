@@ -44,6 +44,16 @@ class LoginController extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse
      */
+    /**
+     * Show the login form.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function showLoginForm()
+    {
+        return redirect()->route('admin.index');
+    }
+
     public function logout()
     {
         Auth::logout();
