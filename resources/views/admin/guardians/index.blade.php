@@ -32,7 +32,7 @@
             </div>
             <div class="content-header-right text-md-end col-md-3 col-12 d-md-block">
                 <div class="mb-1 breadcrumb-right">
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modals-slide-in">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGuardianModal">
                         <i data-feather="plus"></i>
                         <span>Add New Guardian</span>
                     </button>
@@ -86,48 +86,64 @@
 <!-- END: Content-->
 
 <!-- Add Guardian Modal -->
-<div class="modal fade" id="addGuardianModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade" id="addGuardianModal" tabindex="-1" aria-labelledby="addGuardianModalLabel" aria-hidden="true" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
-            <form id="addGuardianForm">
+            <form id="addGuardianForm" novalidate>
                 @csrf
                 <div class="modal-header">
-                    <h5 class="modal-title">Add Guardian</h5>
+                    <h5 class="modal-title" id="addGuardianModalLabel">Add Guardian</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-1">
-                        <label class="form-label">Name</label>
-                        <input type="text" name="name" id="name" class="form-control" required />
+                    <p class="text-muted small">Fill in guardian details. Fields marked with * are required.</p>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="name">Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="name" class="form-control" aria-describedby="nameHelp" placeholder="Full name" maxlength="255" required />
+                        <div class="invalid-feedback" id="nameHelp">Please enter the guardian's name (max 255 characters).</div>
                     </div>
-                    <div class="mb-1">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" id="email" class="form-control" required />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="email">Email <span class="text-danger">*</span></label>
+                        <input type="email" name="email" id="email" class="form-control" aria-describedby="emailHelp" placeholder="name@example.com" maxlength="255" required />
+                        <div class="invalid-feedback" id="emailHelp">Please enter a valid email address (max 255 characters).</div>
                     </div>
-                    <div class="mb-1">
-                        <label class="form-label">Phone</label>
-                        <input type="text" name="phone" id="phone" class="form-control" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="phone">Phone <span class="text-danger">*</span></label>
+                        <input type="tel" name="phone" id="phone" class="form-control" aria-describedby="phoneHelp" placeholder="03xx-xxxxxxx" maxlength="20" inputmode="tel" required pattern="03[0-9]{2}-?[0-9]{7}" />
+                        <div class="invalid-feedback" id="phoneHelp">Please provide a valid phone number (e.g. 03xx-xxxxxxx).</div>
                     </div>
-                    <div class="mb-1">
-                        <label class="form-label">Password (optional)</label>
-                        <input type="password" name="password" id="password" class="form-control" />
+
+                    <div class="mb-3 row">
+                        <div class="col-md-6">
+                            <label class="form-label" for="password">Password <span class="text-danger">*</span></label>
+                            <input type="password" name="password" id="password" class="form-control" aria-describedby="passwordHelp" placeholder="Enter password (min 6 chars)" minlength="6" required />
+                            <div class="invalid-feedback" id="passwordHelp">Password must be at least 6 characters.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="password_confirmation">Confirm Password <span class="text-danger">*</span></label>
+                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" aria-describedby="passwordConfirmHelp" placeholder="Confirm password" minlength="6" required />
+                            <div class="invalid-feedback" id="passwordConfirmHelp">Passwords do not match.</div>
+                        </div>
                     </div>
-                    <div class="mb-1">
-                        <label class="form-label">Password Confirmation</label>
-                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="cnic">CNIC <span class="text-danger">*</span></label>
+                        <input type="text" name="cnic" id="cnic" class="form-control" aria-describedby="cnicHelp" placeholder="12345-1234567-1" maxlength="15" inputmode="numeric" pattern="[0-9]{5}-[0-9]{7}-[0-9]" required />
+                        <div class="invalid-feedback" id="cnicHelp">Please enter a valid CNIC (e.g. 12345-1234567-1).</div>
                     </div>
-                    <div class="mb-1">
-                        <label class="form-label">CNIC</label>
-                        <input type="text" name="cnic" id="cnic" class="form-control" />
-                    </div>
-                    <div class="mb-1">
-                        <label class="form-label">Address</label>
-                        <textarea name="address" id="address" class="form-control"></textarea>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="address">Address</label>
+                        <textarea name="address" id="address" class="form-control" aria-describedby="addressHelp" rows="3" placeholder="Street, City, Country" maxlength="255"></textarea>
+                        <div class="invalid-feedback" id="addressHelp">Please provide an address (max 255 characters) or leave blank.</div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-default-text="Save">Save</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </form>
         </div>
@@ -135,47 +151,79 @@
 </div>
 
 <!-- Edit Guardian Modal (fields names match add) -->
-<div class="modal fade" id="editGuardianModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade" id="editGuardianModal" tabindex="-1" aria-labelledby="editGuardianModalLabel" aria-hidden="true" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
-            <form id="editGuardianForm">
+            <form id="editGuardianForm" novalidate>
                 @csrf
                 @method('PUT')
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit Guardian</h5>
+                    <h5 class="modal-title" id="editGuardianModalLabel">Edit Guardian</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <p class="text-muted small">Update guardian details. Required fields are marked with <span class="text-danger">*</span>.</p>
                     <input type="hidden" name="guardian_id" id="guardian_id" />
-                    <div class="mb-1">
-                        <label class="form-label">Name</label>
-                        <input type="text" name="name" id="edit-name" class="form-control" required />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="edit-name">Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="edit-name" class="form-control" placeholder="Full name" maxlength="255" required />
+                        <div class="invalid-feedback">Please enter the guardian name (max 255 characters).</div>
                     </div>
-                    <div class="mb-1">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" id="edit-email" class="form-control" required />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="edit-email">Email <span class="text-danger">*</span></label>
+                        <input type="email" name="email" id="edit-email" class="form-control" placeholder="name@example.com" maxlength="255" required />
+                        <div class="invalid-feedback">Please enter a valid email (max 255 characters).</div>
                     </div>
-                    <div class="mb-1">
-                        <label class="form-label">Phone</label>
-                        <input type="text" name="phone" id="edit-phone" class="form-control" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="edit-phone">Phone <span class="text-danger">*</span></label>
+                        <input type="tel" name="phone" id="edit-phone" class="form-control" placeholder="03xx-xxxxxxx" maxlength="20" inputmode="tel" required pattern="03[0-9]{2}-?[0-9]{7}" />
+                        <div class="invalid-feedback">Please provide a valid phone number (e.g. 03xx-xxxxxxx).</div>
                     </div>
-                    <div class="mb-1">
-                        <label class="form-label">CNIC</label>
-                        <input type="text" name="cnic" id="edit-cnic" class="form-control" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="edit-cnic">CNIC <span class="text-danger">*</span></label>
+                        <input type="text" name="cnic" id="edit-cnic" class="form-control" placeholder="12345-1234567-1" maxlength="15" inputmode="numeric" pattern="[0-9]{5}-[0-9]{7}-[0-9]" required />
+                        <div class="invalid-feedback">Please enter a valid CNIC (e.g. 12345-1234567-1).</div>
                     </div>
-                    <div class="mb-1">
-                        <label class="form-label">Address</label>
-                        <textarea name="address" id="edit-address" class="form-control"></textarea>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="edit-address">Address</label>
+                        <textarea name="address" id="edit-address" class="form-control" rows="3" placeholder="Street, City, Country" maxlength="255"></textarea>
                     </div>
+
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-default-text="Save Changes">Save Changes</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+        <!-- View modal -->
+        <div class="modal fade" id="viewGuardianModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Guardian Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Name:</strong> <span class="guardian-name"></span></p>
+                        <p><strong>Email:</strong> <span class="guardian-email"></span></p>
+                        <p><strong>CNIC:</strong> <span class="guardian-cnic"></span></p>
+                        <p><strong>Address:</strong> <span class="guardian-address"></span></p>
+                        <ul class="students-list list-unstyled"></ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
                                     <div class="form-check form-switch form-check-success">
                                         <label class="form-check-label mb-50" for="edit-customSwitch">Active</label>
                                         <input type="checkbox" class="form-check-input" id="status" name="status"  />
@@ -211,61 +259,7 @@
                 </div>
 
               <!-- Modal -->
-              <div class="modal modal-slide-in fade" id="modals-slide-in-edit">
-                <div class="modal-dialog sidebar-sm">
-                    <form id="update-guardian" class="edit-record modal-content pt-0" method="POST" action="{{ route('admin.guardians.store') }}" enctype="multipart/form-data">
-                        @csrf
-
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">×</button>
-                        <div class="modal-header mb-1">
-                            <h5 class="modal-title" id="exampleModalLabel">Edit Guardian</h5>
-                        </div>
-                        <input type="hidden" name="status" value="0">
-
-                        <div class="modal-body flex-grow-1">
-                            <div class="mb-1">
-                                <label class="form-label" for="basic-icon-default-fullname">Image</label>
-                                <input type="file" class="form-control" id="img_path" name="img_path" accept="image/*" />
-                            </div>
-                            <div class="mb-1">
-                                <label class="form-label" for="edit-guardian-name">Name</label>
-                                <input type="text" class="form-control dt-full-name" id="edit-guardian-name" name="name" placeholder="Enter Name of Guardian" aria-label="Guardian Name" />
-                            </div>
-                            <div class="mb-1">
-                                <label class="form-label" for="edit-guardian-description">Description</label>
-                                <textarea class="form-control" id="edit-guardian-description" name="description" rows="3" placeholder="Enter Description"></textarea>
-                            </div>
-                            <div class="mb-1">
-                                <label class="form-label" for="basic-icon-default-post">Key Point</label>
-                                <textarea class="form-control dt-description" id="edit-key-point" name="key_points" rows="3" placeholder="Enter key Point"></textarea>
-                            </div>
-                            {{-- <div class="mb-1">
-                                <div class="form-check form-switch form-check-success">
-                                    <label class="form-check-label mb-50" for="edit-customSwitch">Active</label>
-                                    <input type="checkbox" class="form-check-input" id="status" name="status"  />
-                                    <label class="form-check-label" for="edit-customSwitch">
-                                        <span class="switch-icon-left"><i data-feather="check"></i></span>
-                                        <span class="switch-icon-right"><i data-feather="x"></i></span>
-                                    </label>
-                                </div>
-                            </div> --}}
-                            {{-- <div class="mb-1">
-                                <label class="form-label d-block">Status</label>
-                                <div class="btn-group" role="group" aria-label="Toggle Active/Inactive">
-                                    <input type="radio" class="btn-check" name="status" id="active" value="1" >
-                                    <label class="btn btn-outline-success" for="active">Active</label>
-
-                                    <input type="radio" class="btn-check" name="status" id="inactive" value="0">
-                                    <label class="btn btn-outline-danger" for="inactive">Inactive</label>
-                                </div>
-                            </div> --}}
-                            <input type="hidden" class="form-control dt-full-name" id="edit-guardian-id" name="guardian_id" placeholder="Enter Name of Guardian" aria-label="Guardian Name" />
-                            <button type="submit" class="btn btn-primary data-submit me-1" id="update-guardian">Save Changes</button>
-                            <button type="reset" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+              {{-- legacy modal removed; new add/edit modals above are used by JS --}}
 
 
 
@@ -318,77 +312,7 @@
                 });
             }
 
-            // Handle Edit Guardian Button Click (use event delegation in case rows are loaded dynamically)
-            $(document).on('click', '.edit-guardian', function() {
-                const id = $(this).data('id');
-                const name = $(this).data('name');
-                const email = $(this).data('email');
-                const phone = $(this).data('phone');
-                const cnic = $(this).data('cnic');
-                const address = $(this).data('address');
-
-                $('#edit-guardian-name').val(name);
-                $('#edit-guardian-id').val(id);
-                // Set other fields as needed
-            });
-
-            // Handle View Guardian Button Click (delegate to document for dynamically added rows)
-            $(document).on('click', '.view-guardian', function() {
-                const id = $(this).data('id');
-
-                // Fetch guardian details
-                $.ajax({
-                    url: `/admin/guardians/${id}`,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        // Display guardian details in a modal
-                        console.log(response);
-                        // Populate modal with guardian data
-                    },
-                    error: function() {
-                        $('#alert-container').html('<div class="alert alert-danger">Error loading guardian details</div>');
-                    }
-                });
-            });
-
-            // Handle Delete Guardian Button Click (delegate to document for dynamically added rows)
-            $(document).on('click', '.delete-guardian', function() {
-                const id = $(this).data('id');
-
-                if (confirm('Are you sure you want to delete this guardian?')) {
-                    $.ajax({
-                        url: `/admin/guardians/${id}`,
-                        type: 'DELETE',
-                        data: {
-                            _token: $('meta[name="csrf-token"]').attr('content')
-                        },
-                        success: function(response) {
-                            $('#guardian-row-' + id).fadeOut(function() {
-                                $(this).remove();
-                            });
-
-                            $('#alert-container').html(`
-                                <div class="alert alert-success">
-                                    Guardian deleted successfully
-                                </div>
-                            `);
-
-                            // Auto-hide alert after 3 seconds
-                            setTimeout(function() {
-                                $('#alert-container .alert').fadeOut();
-                            }, 3000);
-                        },
-                        error: function() {
-                            $('#alert-container').html(`
-                                <div class="alert alert-danger">
-                                    Error deleting guardian
-                                </div>
-                            `);
-                        }
-                    });
-                }
-            });
+            // CRUD actions are handled in public/js/guardians/custom.js to avoid duplication
         });
     </script>
 @endsection

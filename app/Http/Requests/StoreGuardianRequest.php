@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreGuardianRequest extends FormRequest
 {
@@ -23,11 +24,11 @@ class StoreGuardianRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'nullable|string|max:20',
-            // Make password optional so UI can omit it; if provided it must be confirmed
-            'password' => 'nullable|min:6|confirmed',
-            'cnic' => 'nullable|string|max:15',
+            'email' => ['required', 'email', Rule::unique('users', 'email')],
+            'phone' => 'required|string|max:20',
+            // Password required on create and must be confirmed
+            'password' => 'required|min:6|confirmed',
+            'cnic' => ['required', 'string', 'max:15', Rule::unique('guardians', 'cnic')],
             'address' => 'nullable|string|max:255',
         ];
     }

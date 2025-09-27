@@ -34,15 +34,30 @@ class GuardianController extends Controller
             // If Yajra DataTables is available use it, otherwise return a plain JSON
             // structure that client-side DataTables can consume (the 'data' key).
             if (class_exists('\\Yajra\\DataTables\\Facades\\DataTables')) {
-                return \Yajra\DataTables\Facades\DataTables::of($guardians)
-                    ->addColumn('action', function($row){
-                        $btn = '<button data-id="'.$row->id.'" class="btn btn-info btn-sm view-guardian"><i class="fa fa-eye"></i></button> ';
-                        $btn .= '<button data-id="'.$row->id.'" class="btn btn-primary btn-sm edit-guardian"><i class="fa fa-edit"></i></button> ';
-                        $btn .= '<button data-id="'.$row->id.'" class="btn btn-danger btn-sm delete-guardian"><i class="fa fa-trash"></i></button>';
-                        return $btn;
-                    })
-                    ->rawColumns(['action'])
-                    ->make(true);
+                    return \Yajra\DataTables\Facades\DataTables::of($guardians)
+                        ->addColumn('name', function($row){
+                            return optional($row->user)->name ?? '';
+                        })
+                        ->addColumn('email', function($row){
+                            return optional($row->user)->email ?? '';
+                        })
+                        ->addColumn('phone', function($row){
+                            return optional($row->user)->phone ?? '';
+                        })
+                        ->addColumn('cnic', function($row){
+                            return $row->cnic ?? '';
+                        })
+                        ->addColumn('address', function($row){
+                            return $row->address ?? '';
+                        })
+                        ->addColumn('action', function($row){
+                            $btn = '<button data-id="'.$row->id.'" class="btn btn-info btn-sm view-guardian"><i class="fa fa-eye"></i></button> ';
+                            $btn .= '<button data-id="'.$row->id.'" class="btn btn-primary btn-sm edit-guardian"><i class="fa fa-edit"></i></button> ';
+                            $btn .= '<button data-id="'.$row->id.'" class="btn btn-danger btn-sm delete-guardian"><i class="fa fa-trash"></i></button>';
+                            return $btn;
+                        })
+                        ->rawColumns(['action'])
+                        ->make(true);
             }
 
             // Fallback: manually build the array expected by client-side DataTables
@@ -57,7 +72,7 @@ class GuardianController extends Controller
                     'id' => $row->id,
                     'name' => $name,
                     'email' => $email,
-                    'phone' => $row->phone ?? '',
+                    'phone' => optional($row->user)->phone ?? '',
                     'cnic' => $row->cnic ?? '',
                     'address' => $row->address ?? '',
                     'action' => $btn,
@@ -83,7 +98,12 @@ class GuardianController extends Controller
      */
     public function store(StoreGuardianRequest $request)
     {
-        $this->repository->create($request->validated());
+        $guardian = $this->repository->create($request->validated());
+
+        if ($request->ajax()) {
+            return response()->json(["success" => true, "message" => "Parent created successfully", 'data' => $guardian]);
+        }
+
         return redirect()->route('admin.guardians.index')->with('success', 'Parent created successfully.');
     }
 

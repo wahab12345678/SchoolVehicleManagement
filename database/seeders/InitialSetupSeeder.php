@@ -38,6 +38,7 @@ class InitialSetupSeeder extends Seeder
                 'name' => $userData['name'],
                 'email' => $userData['email'],
                 'password' => Hash::make('password'), // use secure password in real apps
+                'phone' => '92' . substr(preg_replace('/\D+/', '', $userData['email']), 0, 9) ?? null,
             ]);
             $user->assignRole($userData['role']);
         }

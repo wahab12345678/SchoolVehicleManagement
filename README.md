@@ -59,3 +59,68 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+---
+
+# SchoolVehicleManagement — Project Setup
+
+This section describes how to get the project running locally and how to run migrations and seeders.
+
+## Prerequisites
+- PHP 8.2+
+- Composer
+- Node.js & npm (optional, for frontend assets)
+- A database (MySQL/MariaDB recommended)
+
+## Quick start (Windows / PowerShell)
+
+1. Install PHP dependencies:
+
+```powershell
+composer install
+```
+
+2. Copy and edit environment file:
+
+```powershell
+copy .env.example .env
+# open .env and set DB_* values
+```
+
+3. Generate app key:
+
+```powershell
+php artisan key:generate
+```
+
+4. Run migrations and seeders (single command):
+
+```powershell
+php artisan migrate --seed
+```
+
+If migrations fail due to duplicate CNIC values, run the duplicate finder in tinker to identify problematic rows before applying the unique constraint.
+
+5. (Optional) Build front-end assets:
+
+```powershell
+npm install
+npm run build
+```
+
+6. Serve the application locally:
+
+```powershell
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+Login with seeded admin credentials:
+
+- Email: admin@example.com
+- Password: password
+
+## Notes
+- The app normalizes phone numbers to `92...` format; frontend attempts to normalize before submit and the repository normalizes server-side too.
+- The guardians `cnic` column has a unique index; if a migration fails because of duplicates, run the duplicate detection query and resolve duplicates before migrating.
+
+If you hit errors running the migrate/seed step, paste the full error output and I'll guide you through the exact fix.

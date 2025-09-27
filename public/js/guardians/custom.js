@@ -6,6 +6,23 @@ $(document).ready(function() {
         }
     });
 
+    // Helper: normalize phone to '92...' format
+    function normalizePhone(input) {
+        if (!input) return '';
+        var digits = input.replace(/\D+/g, '');
+        if (!digits) return '';
+        // if starts with 0 -> replace leading 0 with 92
+        if (digits.charAt(0) === '0') {
+            digits = '92' + digits.replace(/^0+/, '');
+        }
+        // if starts with 00 -> strip leading zeros
+        if (digits.startsWith('00')) {
+            digits = digits.replace(/^0+/, '');
+        }
+        // remove leading + if present (already removed by regex)
+        return digits;
+    }
+
     // Initialize DataTable if not already initialized. If it exists, reuse the instance.
     var table;
     if ($.fn.dataTable.isDataTable('#guardians-table')) {
@@ -35,7 +52,60 @@ $(document).ready(function() {
     // Add Guardian Form Submit
     $('#addGuardianForm').on('submit', function(e) {
         e.preventDefault();
-        var formData = $(this).serialize();
+        var $form = $(this);
+        // basic client-side validation
+    var name = $.trim($form.find('#name').val());
+    var email = $.trim($form.find('#email').val());
+    var phone = $.trim($form.find('#phone').val());
+    var password = $form.find('#password').val();
+    var passwordConfirm = $form.find('#password_confirmation').val();
+    var cnic = $.trim($form.find('#cnic').val());
+
+        // reset validation states
+        $form.find('.is-invalid').removeClass('is-invalid');
+
+        // name
+        if (!name) {
+            $form.find('#name').addClass('is-invalid');
+            return;
+        }
+
+        if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+            $form.find('#email').addClass('is-invalid');
+            return;
+        }
+
+        // phone required and pattern: 03xx-xxxxxxx (allow optional hyphen)
+        var phonePattern = /^03[0-9]{2}-?[0-9]{7}$/;
+        if (!phone || !phonePattern.test(phone)) {
+            $form.find('#phone').addClass('is-invalid');
+            return;
+        }
+
+        // password required on create
+        if (!password || password.length < 6) {
+            $form.find('#password').addClass('is-invalid');
+            return;
+        }
+
+        if (password !== passwordConfirm) {
+            $form.find('#password_confirmation').addClass('is-invalid');
+            return;
+        }
+
+        // CNIC required and pattern: 12345-1234567-1
+        var cnicPattern = /^[0-9]{5}-[0-9]{7}-[0-9]$/;
+        if (!cnic || !cnicPattern.test(cnic)) {
+            $form.find('#cnic').addClass('is-invalid');
+            return;
+        }
+
+    // normalize phone to '92...' form before submit
+    var normalizedPhone = normalizePhone(phone);
+    $form.find('#phone').val(normalizedPhone);
+    var formData = $form.serialize();
+        var $submit = $form.find('button[type="submit"]');
+        $submit.prop('disabled', true).text('Saving...');
 
         $.ajax({
             url: '/admin/guardians',
@@ -44,14 +114,25 @@ $(document).ready(function() {
             success: function(response) {
                 $('#addGuardianModal').modal('hide');
                 $('#addGuardianForm')[0].reset();
-                table.ajax.reload();
-                toastr.success('Guardian added successfully');
+                table.ajax.reload(null, false);
+                toastr.success(response.message || 'Guardian added successfully');
             },
             error: function(xhr) {
-                var errors = xhr.responseJSON.errors;
-                $.each(errors, function(key, value) {
-                    toastr.error(value[0]);
-                });
+                var errors = xhr.responseJSON && xhr.responseJSON.errors ? xhr.responseJSON.errors : null;
+                if (errors) {
+                    $.each(errors, function(key, value) {
+                        var $field = $form.find('[name="' + key + '"]');
+                        if ($field.length) {
+                            $field.addClass('is-invalid');
+                        }
+                        toastr.error(value[0]);
+                    });
+                } else {
+                    toastr.error('Failed to create guardian.');
+                }
+            },
+            complete: function() {
+                $submit.prop('disabled', false).text('Save');
             }
         });
     });
@@ -82,26 +163,51 @@ $(document).ready(function() {
     $('#editGuardianForm').on('submit', function(e) {
         e.preventDefault();
         var id = $('#editGuardianForm #guardian_id').val();
-        var formData = $(this).serialize();
+        var $form = $(this);
+        // basic client-side validation
+        $form.find('.is-invalid').removeClass('is-invalid');
+    var name = $.trim($form.find('#edit-name').val());
+    var email = $.trim($form.find('#edit-email').val());
+    var phone = $.trim($form.find('#edit-phone').val());
+    var cnic = $.trim($form.find('#edit-cnic').val());
+
+    if (!name) { $form.find('#edit-name').addClass('is-invalid'); return; }
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) { $form.find('#edit-email').addClass('is-invalid'); return; }
+    var phonePattern = /^03[0-9]{2}-?[0-9]{7}$/;
+    if (!phone || !phonePattern.test(phone)) { $form.find('#edit-phone').addClass('is-invalid'); return; }
+    var cnicPattern = /^[0-9]{5}-[0-9]{7}-[0-9]$/;
+    if (!cnic || !cnicPattern.test(cnic)) { $form.find('#edit-cnic').addClass('is-invalid'); return; }
+
+    // normalize phone to '92...' form before submit
+    var normalizedPhone = normalizePhone(phone);
+    $form.find('#edit-phone').val(normalizedPhone);
+    var formData = $form.serialize() + '&_method=PUT';
+        var $submit = $form.find('button[type="submit"]');
+        $submit.prop('disabled', true).text('Saving...');
 
         $.ajax({
             url: '/admin/guardians/' + id,
             type: 'POST',
-            data: formData + '&_method=PUT',
+            data: formData,
             success: function(response) {
                 $('#editGuardianModal').modal('hide');
-                table.ajax.reload();
-                toastr.success('Guardian updated successfully');
+                table.ajax.reload(null, false);
+                toastr.success(response.message || 'Guardian updated successfully');
             },
             error: function(xhr) {
                 var errors = xhr.responseJSON && xhr.responseJSON.errors ? xhr.responseJSON.errors : null;
                 if (errors) {
                     $.each(errors, function(key, value) {
+                        var $field = $form.find('[name="' + key + '"]');
+                        if ($field.length) { $field.addClass('is-invalid'); }
                         toastr.error(value[0]);
                     });
                 } else {
                     toastr.error('Error updating guardian');
                 }
+            },
+            complete: function() {
+                $submit.prop('disabled', false).text('Save Changes');
             }
         });
     });
@@ -160,6 +266,18 @@ $(document).ready(function() {
 
     // Reset forms when modals are closed
     $('.modal').on('hidden.bs.modal', function() {
-        $(this).find('form')[0].reset();
+        var $form = $(this).find('form');
+        if ($form.length) {
+            $form[0].reset();
+            $form.find('.is-invalid').removeClass('is-invalid');
+            $form.find('button[type="submit"]').prop('disabled', false);
+            // restore default button text if changed
+            $form.find('button[type="submit"]').each(function(){
+                var $btn = $(this);
+                if ($btn.data('default-text')) {
+                    $btn.text($btn.data('default-text'));
+                }
+            });
+        }
     });
 });

@@ -6,6 +6,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Public contact endpoint used by the coming soon page
+Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'store'])->name('contact.store');
+
 Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
 Route::middleware('guest')->group(function () {
     Route::get('/admin', [\App\Http\Controllers\AdminController::class, 'index'])->name('admin.index'); // Render login page here

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateGuardianRequest extends FormRequest
 {
@@ -23,9 +24,20 @@ class UpdateGuardianRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $this->guardian->user_id,
-            'phone' => 'nullable|string|max:20',
-            'cnic' => 'nullable|string|max:15',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->ignore($this->guardian->user_id),
+            ],
+            'phone' => 'required|string|max:20',
+            // Password optional on update, but when present must be confirmed
+            'password' => 'nullable|min:6|confirmed',
+            'cnic' => [
+                'required',
+                'string',
+                'max:15',
+                Rule::unique('guardians', 'cnic')->ignore($this->guardian->id),
+            ],
             'address' => 'nullable|string|max:255',
         ];
     }
