@@ -123,4 +123,37 @@ Login with seeded admin credentials:
 - The app normalizes phone numbers to `92...` format; frontend attempts to normalize before submit and the repository normalizes server-side too.
 - The guardians `cnic` column has a unique index; if a migration fails because of duplicates, run the duplicate detection query and resolve duplicates before migrating.
 
+## Queue & Mail
+
+This project queues contact notification emails so the API response remains fast. To enable and process queued mails locally:
+
+1. Set the queue driver in `.env`:
+
+```powershell
+# use the database queue driver for local development
+QUEUE_CONNECTION=database
+```
+
+2. Ensure mail is configured in `.env`. For local testing you can use the `log` mailer; for real delivery configure `smtp` or a transactional provider like Mailgun.
+
+```powershell
+MAIL_MAILER=log
+# MAIL_ADMIN will receive contact notifications
+MAIL_ADMIN=admin@example.com
+```
+
+3. Create the queue tables (a migration is included in the repository) and run migrations:
+
+```powershell
+php artisan migrate
+```
+
+4. Run a worker to process queued jobs:
+
+```powershell
+php artisan queue:work --tries=3
+```
+
+For production, supervise the worker (Supervisor / systemd) or use a managed queue service. Monitor `failed_jobs` and configure alerts as needed.
+
 If you hit errors running the migrate/seed step, paste the full error output and I'll guide you through the exact fix.

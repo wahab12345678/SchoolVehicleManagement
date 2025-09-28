@@ -30,5 +30,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             Route::get('/edit/{id}', [\App\Http\Controllers\Admin\CategoryController::class,  'edit'])->name('categories.edit');
         });
         Route::resource('guardians', App\Http\Controllers\Admin\GuardianController::class)->names('admin.guardians');
+        Route::resource('students', App\Http\Controllers\Admin\StudentController::class)->names('admin.students');
     });
 });

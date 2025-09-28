@@ -49,6 +49,19 @@ $(document).ready(function() {
         });
     }
 
+    // Ensure feather icons render for dynamically inserted buttons (feather is used in admin layout)
+    // Attempt an initial replace if feather is already available
+    if (typeof feather !== 'undefined') {
+        try { feather.replace({ width: 14, height: 14 }); } catch (e) { /* ignore */ }
+    }
+
+    // Always attach the draw handler; call feather.replace() inside it when available.
+    $('#guardians-table').on('draw.dt', function() {
+        if (typeof feather !== 'undefined') {
+            try { feather.replace({ width: 14, height: 14 }); } catch (e) { /* ignore */ }
+        }
+    });
+
     // Add Guardian Form Submit
     $('#addGuardianForm').on('submit', function(e) {
         e.preventDefault();

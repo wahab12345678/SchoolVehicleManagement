@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contact;
+use App\Mail\ContactMail;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Mail;
 
 class ContactController extends Controller
 {
@@ -18,7 +20,19 @@ class ContactController extends Controller
 
         $contact = Contact::create($data);
 
-        // Optionally: dispatch notification to admin here (mail/notification)
+        // Queue a mailable for admins/notify
+        try {
+            $admin = env('MAIL_ADMIN');
+            if ($admin) {
+                Mail::to($admin)->queue(new ContactMail($contact));
+            } else {
+                // fallback: queue without explicit recipient (uses Mailable defaults)
+                Mail::queue(new ContactMail($contact));
+            }
+        } catch (\Throwable $e) {
+            // don't block creation if mail fails; log if needed
+            logger()->error('Failed to queue ContactMail: ' . $e->getMessage());
+        }
 
         return response()->json([
             'ok' => true,

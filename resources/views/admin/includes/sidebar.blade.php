@@ -59,6 +59,12 @@
                     <span class="menu-title text-truncate" data-i18n="Guardians">Guardians</span>
                 </a>
             </li>
+            <li class="nav-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('admin.students.index') }}">
+                    <i data-feather='user'></i>
+                    <span class="menu-title text-truncate" data-i18n="Students">Students</span>
+                </a>
+            </li>
         </ul>
     </div>
 </div>
