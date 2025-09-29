@@ -31,5 +31,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         });
         Route::resource('guardians', App\Http\Controllers\Admin\GuardianController::class)->names('admin.guardians');
         Route::resource('students', App\Http\Controllers\Admin\StudentController::class)->names('admin.students');
+        Route::resource('schools', App\Http\Controllers\Admin\SchoolController::class)->names('admin.schools');
+
     });
 });
