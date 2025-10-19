@@ -38,6 +38,16 @@
                                             <p><strong>Roll Number:</strong> {{ $student->roll_number ?? '-' }}</p>
                                             <p><strong>Class:</strong> {{ $student->class ?? '-' }}</p>
                                             <p><strong>Guardian:</strong> {{ optional($student->guardian->user)->name ?? 'N/A' }}</p>
+                                            @if($student->latitude && $student->longitude)
+                                                <p><strong>Location:</strong> {{ $student->latitude }}, {{ $student->longitude }}</p>
+                                                <div class="mt-2">
+                                                    <a href="https://www.google.com/maps?q={{ $student->latitude }},{{ $student->longitude }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-map-marker-alt"></i> View on Map
+                                                    </a>
+                                                </div>
+                                            @else
+                                                <p><strong>Location:</strong> Not specified</p>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

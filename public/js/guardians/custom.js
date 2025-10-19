@@ -62,6 +62,41 @@ $(document).ready(function() {
         }
     });
 
+    // Search functionality
+    $('#search-guardians').on('keyup', function() {
+        var table = $('#guardians-table').DataTable();
+        table.search(this.value).draw();
+    });
+
+    // Filter by city
+    $('#filter-city').on('change', function() {
+        var table = $('#guardians-table').DataTable();
+        table.column(5).search(this.value).draw(); // Address column
+    });
+
+    // Filter by status
+    $('#filter-status').on('change', function() {
+        var table = $('#guardians-table').DataTable();
+        // This would need to be implemented based on your status logic
+        table.draw();
+    });
+
+    // Initialize Select2 for dropdowns
+    $('.select2').select2({
+        placeholder: 'Select an option',
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Clear filters
+    $('#clear-filters').on('click', function() {
+        $('#search-guardians').val('');
+        $('#filter-city').val('').trigger('change');
+        $('#filter-status').val('').trigger('change');
+        var table = $('#guardians-table').DataTable();
+        table.search('').columns().search('').draw();
+    });
+
     // Add Guardian Form Submit
     $('#addGuardianForm').on('submit', function(e) {
         e.preventDefault();

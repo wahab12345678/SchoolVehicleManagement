@@ -30,8 +30,20 @@ class LoginController extends Controller
     {
         $result = $this->authService->authenticate($request->validated());
         if ($result['success']) {
-            // return redirect()->route('admin.dashboard')->with('success', $result['message']);
-            return redirect()->route('admin.dashboard')->with('success', $result['message']);
+            $user = Auth::user();
+            $role = $result['role'];
+            
+            // Redirect based on user role
+            switch ($role) {
+                case 'admin':
+                    return redirect()->route('admin.dashboard')->with('success', $result['message']);
+                case 'guardian':
+                    return redirect()->route('guardian.dashboard')->with('success', $result['message']);
+                case 'driver':
+                    return redirect()->route('admin.dashboard')->with('success', $result['message']); // Drivers can access admin dashboard for now
+                default:
+                    return redirect()->route('admin.dashboard')->with('success', $result['message']);
+            }
         }
         // Add the email to session and return errors
         return back()->with(['error' => $result['message']]); // Retains email in input

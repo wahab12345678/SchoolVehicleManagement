@@ -21,7 +21,15 @@ class StudentController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $baseQuery = Student::with('guardian.user');
+            // Optimized query with specific field selection and caching
+            $baseQuery = Student::select([
+                'id', 'name', 'roll_number', 'class', 'parent_id', 'school_id', 
+                'latitude', 'longitude', 'created_at', 'updated_at'
+            ])->with([
+                'guardian:id,user_id', 
+                'guardian.user:id,name',
+                'activeTrips:id,student_id,status'
+            ]);
 
             // If Yajra DataTables is available prefer it (keeps previous behavior)
             if (class_exists('\\Yajra\\DataTables\\Facades\\DataTables')) {
@@ -29,13 +37,20 @@ class StudentController extends Controller
                     ->addColumn('guardian', function ($row) {
                         return optional($row->guardian->user)->name ?? '';
                     })
+                    ->addColumn('trip_status', function ($row) {
+                        $activeTrips = $row->activeTrips->count();
+                        if ($activeTrips > 0) {
+                            return '<span class="badge bg-warning">' . $activeTrips . ' Active Trip' . ($activeTrips > 1 ? 's' : '') . '</span>';
+                        }
+                        return '<span class="badge bg-success">Available</span>';
+                    })
                     ->addColumn('action', function ($row) {
                         $view = '<button data-id="' . $row->id . '" class="btn btn-info btn-sm view-student">View</button>';
                         $edit = '<button data-id="' . $row->id . '" class="btn btn-primary btn-sm edit-student">Edit</button>';
                         $del = '<button data-id="' . $row->id . '" class="btn btn-danger btn-sm delete-student">Delete</button>';
                         return $view . ' ' . $edit . ' ' . $del;
                     })
-                    ->rawColumns(['action'])
+                    ->rawColumns(['action', 'trip_status'])
                     ->make(true);
             }
 
@@ -52,12 +67,19 @@ class StudentController extends Controller
                 $btn .= '<button data-id="' . $row->id . '" class="btn btn-primary btn-sm edit-student" title="Edit" aria-label="Edit student">' . $editSvg . '</button> ';
                 $btn .= '<button data-id="' . $row->id . '" class="btn btn-danger btn-sm delete-student" title="Delete" aria-label="Delete student">' . $trashSvg . '</button>';
 
+                $activeTrips = $row->activeTrips->count();
+                $tripStatus = $activeTrips > 0 
+                    ? '<span class="badge bg-warning">' . $activeTrips . ' Active Trip' . ($activeTrips > 1 ? 's' : '') . '</span>'
+                    : '<span class="badge bg-success">Available</span>';
+
                 return [
                     'id' => $row->id,
                     'name' => $row->name,
                     'roll_number' => $row->roll_number,
                     'class' => $row->class,
                     'guardian' => optional($row->guardian->user)->name ?? '',
+                    'location' => ($row->latitude && $row->longitude) ? $row->latitude . ', ' . $row->longitude : 'Not set',
+                    'trip_status' => $tripStatus,
                     'action' => $btn,
                 ];
                 })->toArray();
@@ -82,12 +104,19 @@ class StudentController extends Controller
                 $btn .= '<button data-id="' . $row->id . '" class="btn btn-primary btn-sm edit-student" title="Edit" aria-label="Edit student">' . $editSvg . '</button> ';
                 $btn .= '<button data-id="' . $row->id . '" class="btn btn-danger btn-sm delete-student" title="Delete" aria-label="Delete student">' . $trashSvg . '</button>';
 
+                $activeTrips = $row->activeTrips->count();
+                $tripStatus = $activeTrips > 0 
+                    ? '<span class="badge bg-warning">' . $activeTrips . ' Active Trip' . ($activeTrips > 1 ? 's' : '') . '</span>'
+                    : '<span class="badge bg-success">Available</span>';
+
                 return [
                     'id' => $row->id,
                     'name' => $row->name,
                     'roll_number' => $row->roll_number,
                     'class' => $row->class,
                     'guardian' => optional($row->guardian->user)->name ?? '',
+                    'location' => ($row->latitude && $row->longitude) ? $row->latitude . ', ' . $row->longitude : 'Not set',
+                    'trip_status' => $tripStatus,
                     'action' => $btn,
                 ];
             })->toArray();
@@ -100,7 +129,16 @@ class StudentController extends Controller
             ]);
         }
 
-        return view('admin.students.index');
+        $students = Student::with('guardian.user')->get(); // For filter dropdowns
+        $guardians = \App\Models\Guardian::with('user')->get(); // For filter dropdowns
+
+        return view('admin.students.index', compact('students', 'guardians'));
+    }
+
+    public function create()
+    {
+        $guardians = \App\Models\Guardian::with('user')->get();
+        return view('admin.students.create', compact('guardians'));
     }
 
     public function store(StoreStudentRequest $request)
@@ -193,5 +231,69 @@ class StudentController extends Controller
         }
 
         return redirect()->route('admin.students.index')->with('success', 'Student deleted.');
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        
+        if (empty($ids)) {
+            if ($request->ajax()) {
+                return response()->json(['message' => 'No students selected'], 400);
+            }
+            return redirect()->route('admin.students.index')->with('error', 'No students selected.');
+        }
+
+        $deletedCount = Student::whereIn('id', $ids)->delete();
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => $deletedCount . ' students deleted successfully']);
+        }
+
+        return redirect()->route('admin.students.index')->with('success', $deletedCount . ' students deleted successfully.');
+    }
+
+    public function export(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        
+        $query = Student::with('guardian.user');
+        if (!empty($ids)) {
+            $query->whereIn('id', $ids);
+        }
+        
+        $students = $query->get();
+        
+        $filename = 'students_export_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+        
+        $callback = function() use ($students) {
+            $file = fopen('php://output', 'w');
+            
+            // CSV headers
+            fputcsv($file, ['ID', 'Name', 'Roll Number', 'Class', 'Guardian', 'Latitude', 'Longitude', 'Created At']);
+            
+            // CSV data
+            foreach ($students as $student) {
+                fputcsv($file, [
+                    $student->id,
+                    $student->name,
+                    $student->roll_number,
+                    $student->class,
+                    optional($student->guardian->user)->name ?? 'N/A',
+                    $student->latitude,
+                    $student->longitude,
+                    $student->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+            
+            fclose($file);
+        };
+        
+        return response()->stream($callback, 200, $headers);
     }
 }

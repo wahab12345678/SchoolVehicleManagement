@@ -34,7 +34,14 @@ class StudentRepository
             $rollColumn => $data['roll_number'] ?? ($data['registration_no'] ?? null),
             $classColumn => $data['class'] ?? null,
             'parent_id' => $data['parent_id'] ?? null,
+            'latitude' => isset($data['latitude']) ? $data['latitude'] : null,
+            'longitude' => isset($data['longitude']) ? $data['longitude'] : null,
         ];
+
+        // Ensure registration_no is set if the column exists and is required
+        if (Schema::hasColumn('students', 'registration_no')) {
+            $payload['registration_no'] = $data['registration_no'] ?? $data['roll_number'] ?? 'REG-' . time();
+        }
 
         $student = Student::create($payload);
         return $student->load('guardian');
@@ -62,7 +69,14 @@ class StudentRepository
             $rollColumn => $data['roll_number'] ?? ($data['registration_no'] ?? ($student->{$rollColumn} ?? null)),
             $classColumn => $data['class'] ?? ($student->{$classColumn} ?? null),
             'parent_id' => $data['parent_id'] ?? $student->parent_id,
+            'latitude' => array_key_exists('latitude', $data) ? $data['latitude'] : $student->latitude,
+            'longitude' => array_key_exists('longitude', $data) ? $data['longitude'] : $student->longitude,
         ];
+
+        // Ensure registration_no is set if the column exists and is required
+        if (Schema::hasColumn('students', 'registration_no')) {
+            $updatePayload['registration_no'] = $data['registration_no'] ?? $data['roll_number'] ?? $student->registration_no ?? 'REG-' . time();
+        }
 
         $student->update($updatePayload);
 

@@ -57,6 +57,33 @@
                                 <h4 class="card-title">Guardians List</h4>
                             </div>
                             <div class="card-body">
+                                <!-- Search and Filter Controls -->
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                            <input type="text" id="search-guardians" class="form-control" placeholder="Search by name or email...">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select id="filter-city" class="form-select select2">
+                                            <option value="">All Cities</option>
+                                            <option value="Karachi">Karachi</option>
+                                            <option value="Lahore">Lahore</option>
+                                            <option value="Islamabad">Islamabad</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select id="filter-status" class="form-select select2">
+                                            <option value="">All Status</option>
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button id="clear-filters" class="btn btn-outline-secondary">Clear</button>
+                                    </div>
+                                </div>
                                 <div class="table-responsive">
                                     <table id="guardians-table" class="table table-striped datatables-basic">
                                         <thead>

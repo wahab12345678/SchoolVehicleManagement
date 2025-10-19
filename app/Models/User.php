@@ -52,4 +52,29 @@ class User extends Authenticatable
     {
         return $this->hasOne(Guardian::class);
     }
+
+    public function vehicles()
+    {
+        return $this->hasMany(Vehicle::class, 'driver_id');
+    }
+
+    public function trips()
+    {
+        return $this->hasMany(Trip::class, 'driver_id');
+    }
+
+    public function activeTrips()
+    {
+        return $this->hasMany(Trip::class, 'driver_id')->whereIn('status', ['pending', 'in_progress']);
+    }
+
+    public function getIsDriverAttribute()
+    {
+        return $this->hasRole('driver');
+    }
+
+    public function getIsGuardianAttribute()
+    {
+        return $this->hasRole('guardian');
+    }
 }

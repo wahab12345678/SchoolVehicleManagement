@@ -20,18 +20,20 @@ class AuthService
         ]);
         if ($attempt) {
             $user = Auth::user(); // Get the authenticated user
-            // Check if the user has the 'admin' role
-            if ($user->hasRole('admin')) {
+            
+            // Check if the user has any of the allowed roles
+            if ($user->hasAnyRole(['admin', 'guardian', 'driver'])) {
                 return [
                     'success' => true,
                     'message' => 'Login successful.',
+                    'role' => $user->getRoleNames()->first()
                 ];
             }
             // Log out the user if they don't have the required role
             Auth::logout();
             return [
                 'success' => false,
-                'message' => 'Invalid role. Only admin can log in.',
+                'message' => 'Invalid role. Access denied.',
             ];
         }
         return [

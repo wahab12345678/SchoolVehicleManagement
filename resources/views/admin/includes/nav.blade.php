@@ -1,5 +1,5 @@
 <!-- BEGIN: Header-->
-<nav class="header-navbar navbar navbar-expand-lg align-items-center floating-nav navbar-light navbar-shadow container-xxl">
+<nav class="header-navbar navbar navbar-expand-lg align-items-center floating-nav navbar-light navbar-shadow container-xxl" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-bottom: 1px solid rgba(99, 102, 241, 0.1); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
     <div class="navbar-container d-flex content">
         <div class="bookmark-wrapper d-flex align-items-center">
             <ul class="nav navbar-nav d-xl-none">
@@ -25,7 +25,7 @@
             {{-- <li class="nav-item dropdown dropdown-language"><a class="nav-link dropdown-toggle" id="dropdown-flag" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="flag-icon flag-icon-us"></i><span class="selected-language">English</span></a>
                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-flag"><a class="dropdown-item" href="#" data-language="en"><i class="flag-icon flag-icon-us"></i> English</a><a class="dropdown-item" href="#" data-language="fr"><i class="flag-icon flag-icon-fr"></i> French</a><a class="dropdown-item" href="#" data-language="de"><i class="flag-icon flag-icon-de"></i> German</a><a class="dropdown-item" href="#" data-language="pt"><i class="flag-icon flag-icon-pt"></i> Portuguese</a></div>
             </li> --}}
-            <li class="nav-item d-none d-lg-block"><a class="nav-link nav-link-style"><i class="ficon" data-feather="moon"></i></a></li>
+            <li class="nav-item d-none d-lg-block"><a class="nav-link nav-link-style" style="color: #6366f1; transition: all 0.3s ease;"><i class="ficon" data-feather="moon"></i></a></li>
             {{-- <li class="nav-item nav-search"><a class="nav-link nav-link-search"><i class="ficon" data-feather="search"></i></a>
                 <div class="search-input">
                     <div class="search-input-icon"><i data-feather="search"></i></div>
@@ -199,10 +199,10 @@
                     <li class="dropdown-menu-footer"><a class="btn btn-primary w-100" href="#">Read all notifications</a></li>
                 </ul>
             </li> --}}
-            <li class="nav-item dropdown dropdown-user"><a class="nav-link dropdown-toggle dropdown-user-link" id="dropdown-user" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <div class="user-nav d-sm-flex d-none"><span class="user-name fw-bolder">{{Auth::user()->name}}</span><span class="user-status">{{ ucfirst(Auth::user()->getRoleNames()->first()) }}</span></div><span class="avatar"><img class="round" src="../../../app-assets/images/portrait/small/avatar-s-11.jpg" alt="avatar" height="40" width="40"><span class="avatar-status-online"></span></span>
+            <li class="nav-item dropdown dropdown-user"><a class="nav-link dropdown-toggle dropdown-user-link" id="dropdown-user" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%); border-radius: 12px; padding: 0.5rem 1rem; transition: all 0.3s ease; border: 1px solid rgba(99, 102, 241, 0.2);">
+                    <div class="user-nav d-sm-flex d-none"><span class="user-name fw-bolder" style="color: #1f2937;">{{Auth::user()->name}}</span><span class="user-status" style="color: #6366f1; font-weight: 500;">{{ ucfirst(Auth::user()->getRoleNames()->first()) }}</span></div><span class="avatar"><img class="round" src="../../../app-assets/images/portrait/small/avatar-s-11.jpg" alt="avatar" height="40" width="40" style="border: 2px solid #6366f1;"><span class="avatar-status-online" style="background: #10b981; border: 2px solid #ffffff;"></span></span>
                 </a>
-                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user">
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); padding: 1rem;">
                     {{-- <a class="dropdown-item" href="page-profile.html"><i class="me-50" data-feather="user"></i> Profile</a>
                     <a class="dropdown-item" href="app-email.html"><i class="me-50" data-feather="mail"></i> Inbox</a>
                     <a class="dropdown-item" href="app-todo.html"><i class="me-50" data-feather="check-square"></i> Task</a>
@@ -211,8 +211,8 @@
                     <a class="dropdown-item" href="page-account-settings-account.html"><i class="me-50" data-feather="settings"></i> Settings</a>
                     <a class="dropdown-item" href="page-pricing.html"><i class="me-50" data-feather="credit-card"></i> Pricing</a>
                     <a class="dropdown-item" href="page-faq.html"><i class="me-50" data-feather="help-circle"></i> FAQ</a> --}}
-                    <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                        <i class="me-50" data-feather="power"></i> Logout
+                    <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" style="color: #ef4444; font-weight: 500; padding: 0.75rem 1rem; border-radius: 8px; transition: all 0.3s ease; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1);">
+                        <i class="me-50" data-feather="power" style="color: #ef4444;"></i> Logout
                     </a>
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                         @csrf
@@ -299,4 +299,46 @@
             <div class="d-flex justify-content-start"><span class="me-75" data-feather="alert-circle"></span><span>No results found.</span></div>
         </a></li>
 </ul>
+
+<style>
+    /* Enhanced Header Styling */
+    .header-navbar {
+        backdrop-filter: blur(20px);
+        transition: all 0.3s ease;
+    }
+    
+    .header-navbar:hover {
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12) !important;
+    }
+    
+    .nav-link {
+        transition: all 0.3s ease;
+    }
+    
+    .nav-link:hover {
+        color: #6366f1 !important;
+        transform: translateY(-1px);
+    }
+    
+    .dropdown-user-link:hover {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%) !important;
+        border-color: rgba(99, 102, 241, 0.3) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+    }
+    
+    .dropdown-item:hover {
+        background: rgba(99, 102, 241, 0.1) !important;
+        color: #6366f1 !important;
+        transform: translateX(4px);
+    }
+    
+    .avatar {
+        transition: all 0.3s ease;
+    }
+    
+    .avatar:hover {
+        transform: scale(1.05);
+    }
+</style>
 <!-- END: Header-->

@@ -34,12 +34,11 @@
         </ul> -->
       <ul class="nav navbar-nav flex-row align-items-center">
     <li class="nav-item me-auto">
-        <a class="navbar-brand d-flex align-items-center" href="{{ route('admin.category') }}" style="gap: 10px;">
-            <!-- Logo Icon -->
-            <img src="{{ asset('images/final_logo.png') }}" alt="{{ env('APP_NAME') }} Logo" style="height: 71px; width: auto;  margin-left: 47px;">
-
-            <!-- Logo Text -->
-            <!-- <h2 class="brand-text mb-0" style="font-size: 16px;margin: 0;margin-left: -41px;">{{ env('APP_NAME') }}</h2> -->
+        <a class="navbar-brand d-flex align-items-center justify-content-center" href="{{ route('admin.dashboard') }}" style="padding: 1.5rem; text-decoration: none;">
+            <!-- Logo Only -->
+            <div class="logo-icon d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); transition: all 0.3s ease;">
+                <img src="{{ asset('images/school-vehicle-logo.svg') }}" alt="School Vehicle Management Logo" style="width: 32px; height: 32px; filter: brightness(0) invert(1);" />
+            </div>
         </a>
     </li>
 </ul>
@@ -49,13 +48,34 @@
     <div class="shadow-bottom"></div>
     <div class="main-menu-content">
         <ul class="navigation navigation-main" id="main-menu-navigation" data-menu="menu-navigation" style="margin-top: 34px;">
-            {{-- <li class=" nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><a class="d-flex align-items-center"href="{{ route('admin.dashboard') }}"><i data-feather="home"></i><span class="menu-title text-truncate" data-i18n="Dashboard">Dashboard</span></a>
-            </li> --}}
-            <li class=" navigation-header"><span data-i18n="Apps &amp; Pages">Modules</span><i data-feather="more-horizontal"></i>
+            <!-- Dashboard -->
+            <li class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('admin.dashboard') }}">
+                    <i data-feather="home"></i>
+                    <span class="menu-title text-truncate" data-i18n="Dashboard">Dashboard</span>
+                </a>
+            </li>
+
+            <!-- School Management Section -->
+            <li class=" navigation-header">
+                <span data-i18n="School Management">School Management</span>
+                <i data-feather="more-horizontal"></i>
+            </li>
+            <li class="nav-item {{ request()->routeIs('admin.school.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('admin.school.index') }}">
+                    <i data-feather="home"></i>
+                    <span class="menu-title text-truncate" data-i18n="School">School Details</span>
+                </a>
+            </li>
+
+            <!-- People Management Section -->
+            <li class=" navigation-header">
+                <span data-i18n="People Management">People Management</span>
+                <i data-feather="more-horizontal"></i>
             </li>
             <li class="nav-item {{ request()->routeIs('admin.guardians.*') ? 'active' : '' }}">
                 <a class="d-flex align-items-center" href="{{ route('admin.guardians.index') }}">
-                    <i data-feather='corner-down-right'></i>
+                    <i data-feather='users'></i>
                     <span class="menu-title text-truncate" data-i18n="Guardians">Guardians</span>
                 </a>
             </li>
@@ -65,7 +85,63 @@
                     <span class="menu-title text-truncate" data-i18n="Students">Students</span>
                 </a>
             </li>
+            <li class="nav-item {{ request()->routeIs('admin.drivers.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('admin.drivers.index') }}">
+                    <i data-feather='user-check'></i>
+                    <span class="menu-title text-truncate" data-i18n="Drivers">Drivers</span>
+                </a>
+            </li>
+
+            <!-- Transportation Management Section -->
+            <li class=" navigation-header">
+                <span data-i18n="Transportation">Transportation</span>
+                <i data-feather="more-horizontal"></i>
+            </li>
+            <li class="nav-item {{ request()->routeIs('admin.vehicles.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('admin.vehicles.index') }}">
+                    <i data-feather='truck'></i>
+                    <span class="menu-title text-truncate" data-i18n="Vehicles">Vehicles</span>
+                </a>
+            </li>
+            <li class="nav-item {{ request()->routeIs('admin.routes.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('admin.routes.index') }}">
+                    <i data-feather='map'></i>
+                    <span class="menu-title text-truncate" data-i18n="Routes">Routes</span>
+                </a>
+            </li>
+            <li class="nav-item {{ request()->routeIs('admin.trips.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('admin.trips.index') }}">
+                    <i data-feather='navigation'></i>
+                    <span class="menu-title text-truncate" data-i18n="Trips">Trips</span>
+                </a>
+            </li>
         </ul>
     </div>
 </div>
 <!-- END: Main Menu-->
+
+<style>
+    /* Enhanced Sidebar Logo Styling - Logo Only */
+    .navbar-brand:hover .logo-icon {
+        transform: scale(1.1);
+        box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5) !important;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    }
+    
+    .navbar-brand {
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .navbar-brand:hover {
+        text-decoration: none !important;
+    }
+    
+    .logo-icon {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .logo-icon:hover {
+        transform: scale(1.05);
+    }
+</style>

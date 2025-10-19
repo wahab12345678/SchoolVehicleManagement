@@ -15,5 +15,8 @@ class DatabaseSeeder extends Seeder
     {
         // run the InitialSetupSeeder
         $this->call(InitialSetupSeeder::class);
+        
+        // run the SchoolVehicleManagementSeeder for dummy data
+        $this->call(SchoolVehicleManagementSeeder::class);
     }
 }

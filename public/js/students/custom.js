@@ -1,4 +1,4 @@
-// Minimal Students JS: initializes DataTable and handles add student form via AJAX
+// Students JS: initializes DataTable and handles CRUD operations
 $(function() {
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
 
@@ -12,12 +12,36 @@ $(function() {
                     dataSrc: 'data'
                 },
                 columns: [
+                    { 
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, row) {
+                            return '<input type="checkbox" class="form-check-input row-checkbox" value="' + row.id + '">';
+                        }
+                    },
                     { data: 'id' },
                     { data: 'name' },
                     { data: 'roll_number' },
                     { data: 'class' },
                     { data: 'guardian' },
-                    { data: 'action', orderable: false, searchable: false }
+                    { data: 'location' },
+                    { data: 'trip_status' },
+                    { 
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, row) {
+                            var eyeSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+                            var editSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
+                            var trashSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
+
+                            var btn = '<a href="/admin/students/' + row.id + '" class="btn btn-info btn-sm" title="View" aria-label="View student">' + eyeSvg + '</a> ';
+                            btn += '<a href="/admin/students/' + row.id + '/edit" class="btn btn-primary btn-sm" title="Edit" aria-label="Edit student">' + editSvg + '</a> ';
+                            btn += '<button data-id="' + row.id + '" class="btn btn-danger btn-sm delete-student" title="Delete" aria-label="Delete student">' + trashSvg + '</button>';
+                            return btn;
+                        }
+                    }
                 ],
                 responsive: true,
                 lengthMenu: [10,25,50,100]
@@ -34,89 +58,125 @@ $(function() {
 
     initTable();
 
-        $('#addStudentForm').on('submit', function(e) {
-        e.preventDefault();
-        var data = $(this).serialize();
-        var $submit = $(this).find('button[type="submit"]');
-        $submit.prop('disabled', true).text('Saving...');
+    // Initialize Select2 for dropdowns
+    $('.select2').select2({
+        placeholder: 'Select an option',
+        allowClear: true,
+        width: '100%'
+    });
 
-        $.post('/admin/students', data)
-            .done(function(res) {
-                $('#addStudentModal').modal('hide');
-                $('#addStudentForm')[0].reset();
+    // Search and filter functionality
+    var table;
+    function getTable() {
+        if (!table && $.fn.dataTable.isDataTable('#students-table')) {
+            table = $('#students-table').DataTable();
+        }
+        return table;
+    }
+
+    // Name search
+    $('#search-name').on('keyup', function() {
+        var table = getTable();
+        if (table) {
+            table.column(1).search(this.value).draw();
+        }
+    });
+
+    // Class filter
+    $('#filter-class').on('change', function() {
+        var table = getTable();
+        if (table) {
+            table.column(4).search(this.value).draw();
+        }
+    });
+
+    // Guardian filter
+    $('#filter-guardian').on('change', function() {
+        var table = getTable();
+        if (table) {
+            table.column(5).search(this.value).draw();
+        }
+    });
+
+    // Clear filters
+    $('#clear-filters').on('click', function() {
+        $('#search-name').val('');
+        $('#filter-class').val('').trigger('change');
+        $('#filter-guardian').val('').trigger('change');
+        var table = getTable();
+        if (table) {
+            table.search('').columns().search('').draw();
+        }
+    });
+
+    // Bulk operations
+    $('#select-all').on('change', function() {
+        var isChecked = this.checked;
+        $('.row-checkbox').prop('checked', isChecked);
+        updateBulkActions();
+    });
+
+    $(document).on('change', '.row-checkbox', function() {
+        updateBulkActions();
+    });
+
+    function updateBulkActions() {
+        var checked = $('.row-checkbox:checked').length;
+        var total = $('.row-checkbox').length;
+        
+        if (checked > 0) {
+            $('#bulk-actions').show();
+            $('#selected-count').text(checked + ' of ' + total + ' students selected');
+        } else {
+            $('#bulk-actions').hide();
+        }
+        
+        // Update select all checkbox
+        if (checked === 0) {
+            $('#select-all').prop('indeterminate', false).prop('checked', false);
+        } else if (checked === total) {
+            $('#select-all').prop('indeterminate', false).prop('checked', true);
+        } else {
+            $('#select-all').prop('indeterminate', true);
+        }
+    }
+
+    // Bulk delete
+    $('#bulk-delete').on('click', function() {
+        var selected = $('.row-checkbox:checked').map(function() { return this.value; }).get();
+        if (selected.length === 0) return;
+        
+        if (!confirm('Are you sure you want to delete ' + selected.length + ' selected students?')) return;
+        
+        $.ajax({
+            url: '/admin/students/bulk-delete',
+            type: 'POST',
+            data: { ids: selected },
+            success: function(res) {
                 if ($.fn.dataTable.isDataTable('#students-table')) {
                     $('#students-table').DataTable().ajax.reload(null, false);
                 }
-                if (typeof toastr !== 'undefined') toastr.success(res.message || 'Student added successfully');
-            }).fail(function(xhr) {
-                var msg = 'Failed to save student';
-                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    var first = Object.values(xhr.responseJSON.errors)[0];
-                    if (first && first[0]) msg = first[0];
-                }
-                if (typeof toastr !== 'undefined') toastr.error(msg); else alert(msg);
-            }).always(function() {
-                $submit.prop('disabled', false).text($submit.data('default-text') || 'Save');
-            });
+                if (typeof toastr !== 'undefined') toastr.success(res.message || 'Selected students deleted successfully');
+            },
+            error: function() {
+                if (typeof toastr !== 'undefined') toastr.error('Failed to delete selected students');
+            }
+        });
     });
 
-    // View student details
-    $(document).on('click', '.view-student', function() {
-        var id = $(this).data('id');
-        $.get('/admin/students/' + id)
-            .done(function(res) {
-                $('.student-name').text(res.name || 'N/A');
-                $('.student-roll').text(res.roll_number || 'N/A');
-                $('.student-class').text(res.class || 'N/A');
-                var guardianName = 'N/A';
-                if (res.guardian) {
-                    if (res.guardian.user && res.guardian.user.name) guardianName = res.guardian.user.name;
-                    else if (res.guardian.name) guardianName = res.guardian.name;
-                }
-                $('.student-guardian').text(guardianName);
-                $('#viewStudentModal').modal('show');
-            }).fail(function() { if (typeof toastr !== 'undefined') toastr.error('Failed to load student details'); else alert('Failed to load student details'); });
-    });
-
-    // Edit student - load into edit modal
-    $(document).on('click', '.edit-student', function() {
-        var id = $(this).data('id');
-        $.get('/admin/students/' + id + '/edit')
-            .done(function(res) {
-                $('#student_id').val(res.id);
-                $('#edit-name').val(res.name || '');
-                $('#edit-roll-number').val(res.roll_number || '');
-                $('#edit-class').val(res.class || '');
-                // res.guardian may be an object; pick id if present
-                var parentId = '';
-                if (res.guardian && typeof res.guardian === 'object') parentId = res.guardian.id || res.guardian.user_id || '';
-                $('#edit-parent-id').val(parentId);
-                $('#editStudentModal').modal('show');
-            }).fail(function() { if (typeof toastr !== 'undefined') toastr.error('Failed to load student for edit'); else alert('Failed to load student for edit'); });
-    });
-
-    // Update student
-    $('#editStudentForm').on('submit', function(e) {
-        e.preventDefault();
-        var id = $('#student_id').val();
-        var $submit = $(this).find('button[type="submit"]');
-        $submit.prop('disabled', true).text('Saving...');
-        var data = $(this).serialize() + '&_method=PUT';
-        $.post('/admin/students/' + id, data)
-            .done(function(res) {
-                $('#editStudentModal').modal('hide');
-                if ($.fn.dataTable.isDataTable('#students-table')) $('#students-table').DataTable().ajax.reload(null, false);
-                if (typeof toastr !== 'undefined') toastr.success(res.message || 'Student updated successfully');
-            }).fail(function(xhr) {
-                var msg = 'Failed to update student';
-                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    var first = Object.values(xhr.responseJSON.errors)[0];
-                    if (first && first[0]) msg = first[0];
-                }
-                if (typeof toastr !== 'undefined') toastr.error(msg); else alert(msg);
-            }).always(function() {
-                $submit.prop('disabled', false).text($submit.data('default-text') || 'Save Changes');
-            });
+    // Bulk export
+    $('#bulk-export').on('click', function() {
+        var selected = $('.row-checkbox:checked').map(function() { return this.value; }).get();
+        if (selected.length === 0) return;
+        
+        var form = $('<form method="POST" action="/admin/students/export">');
+        form.append('<input type="hidden" name="_token" value="' + $('meta[name="csrf-token"]').attr('content') + '">');
+        selected.forEach(function(id) {
+            form.append('<input type="hidden" name="ids[]" value="' + id + '">');
+        });
+        $('body').append(form);
+        form.submit();
+        form.remove();
     });
 
     // Delete student
@@ -128,14 +188,5 @@ $(function() {
                 if ($.fn.dataTable.isDataTable('#students-table')) $('#students-table').DataTable().ajax.reload(null, false);
                 if (typeof toastr !== 'undefined') toastr.success(res.message || 'Student deleted successfully');
             }).fail(function() { if (typeof toastr !== 'undefined') toastr.error('Failed to delete student'); else alert('Failed to delete student'); });
-    });
-
-    // Reset forms when modals are closed
-    $('.modal').on('hidden.bs.modal', function() {
-        var $form = $(this).find('form');
-        if ($form.length) {
-            $form[0].reset();
-            $form.find('.is-invalid').removeClass('is-invalid');
-        }
     });
 });
