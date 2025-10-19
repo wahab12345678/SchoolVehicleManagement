@@ -13,7 +13,6 @@ class AdminController extends Controller
         if (Auth::check() && Auth::user()->hasRole('admin')) {
             return redirect()->route('admin.dashboard');
         }
-
         return view('admin.index');
     }
 
