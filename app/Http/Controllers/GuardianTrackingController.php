@@ -25,7 +25,7 @@ class GuardianTrackingController extends Controller
         }
 
         $students = $guardian->students()->with(['trips' => function($query) {
-            $query->whereIn('status', ['pending', 'in_progress'])->with(['vehicle.driver', 'route', 'locations' => function($q) {
+            $query->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress'])->with(['vehicle.driver', 'route', 'locations' => function($q) {
                 $q->latest('recorded_at')->limit(1);
             }]);
         }])->get();
@@ -72,7 +72,7 @@ class GuardianTrackingController extends Controller
         }
 
         $activeTrip = $student->trips()
-            ->whereIn('status', ['pending', 'in_progress'])
+            ->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress'])
             ->with(['vehicle.driver', 'route', 'locations' => function($q) {
                 $q->orderBy('recorded_at', 'desc')->limit(1);
             }])
