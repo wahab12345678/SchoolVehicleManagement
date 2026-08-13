@@ -14,13 +14,28 @@ class Trip extends Model
         'student_id',
         'school_id',
         'status',
+        'direction',
         'started_at',
-        'ended_at'
+        'pickup_started_at',
+        'arrived_at',
+        'boarded_at',
+        'ended_at',
+        'notified_pickup_at',
+        'notified_arrived_at',
+        'notified_boarded_at',
+        'notified_completed_at',
     ];
 
     protected $casts = [
         'started_at' => 'datetime',
-        'ended_at' => 'datetime'
+        'pickup_started_at' => 'datetime',
+        'arrived_at' => 'datetime',
+        'boarded_at' => 'datetime',
+        'ended_at' => 'datetime',
+        'notified_pickup_at' => 'datetime',
+        'notified_arrived_at' => 'datetime',
+        'notified_boarded_at' => 'datetime',
+        'notified_completed_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -37,7 +52,9 @@ class Trip extends Model
             \Cache::forget('dashboard_stats');
             \Cache::forget('dashboard_active_trips');
             \Cache::forget('dashboard_recent_trips');
-            \Cache::tags(['trips', 'dashboard'])->flush();
+            if (\Cache::supportsTags()) {
+                \Cache::tags(['trips', 'dashboard'])->flush();
+            }
         });
 
         static::deleted(function ($trip) {
@@ -49,7 +66,9 @@ class Trip extends Model
             \Cache::forget('dashboard_stats');
             \Cache::forget('dashboard_active_trips');
             \Cache::forget('dashboard_recent_trips');
-            \Cache::tags(['trips', 'dashboard'])->flush();
+            if (\Cache::supportsTags()) {
+                \Cache::tags(['trips', 'dashboard'])->flush();
+            }
         });
     }
 
@@ -93,7 +112,7 @@ class Trip extends Model
 
     public function getIsActiveAttribute()
     {
-        return in_array($this->status, ['pending', 'in_progress']);
+        return in_array($this->status, ['pending', 'en_route', 'arrived', 'in_progress']);
     }
 
     public function getCurrentLocationAttribute()
@@ -103,7 +122,7 @@ class Trip extends Model
 
     public function scopeActive($query)
     {
-        return $query->whereIn('status', ['pending', 'in_progress']);
+        return $query->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress']);
     }
 
     public function scopeCompleted($query)

@@ -70,7 +70,8 @@ class TripController extends Controller
             'vehicle_id' => 'required|exists:vehicles,id',
             'route_id' => 'required|exists:routes,id',
             'driver_id' => 'required|exists:users,id',
-            'status' => 'required|in:pending,in_progress,completed'
+            'status' => 'required|in:pending,en_route,arrived,in_progress,completed',
+            'direction' => 'nullable|in:to_school,from_school',
         ]);
 
         $trip = Trip::create($request->all());
@@ -114,7 +115,8 @@ class TripController extends Controller
             'vehicle_id' => 'required|exists:vehicles,id',
             'route_id' => 'required|exists:routes,id',
             'driver_id' => 'required|exists:users,id',
-            'status' => 'required|in:pending,in_progress,completed'
+            'status' => 'required|in:pending,en_route,arrived,in_progress,completed',
+            'direction' => 'nullable|in:to_school,from_school',
         ]);
 
         $trip->update($request->all());

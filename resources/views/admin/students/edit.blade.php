@@ -76,7 +76,7 @@
                                                     <label class="col-form-label" for="registration_no">Registration Number</label>
                                                 </div>
                                                 <div class="col-sm-9">
-                                                    <input type="text" id="registration_no" class="form-control @error('registration_no') is-invalid @enderror" name="registration_no" placeholder="Registration Number" value="{{ old('registration_no', $student->registration_no) }}" />
+                                                    <input type="text" id="registration_no" class="form-control @error('registration_no') is-invalid @enderror" name="registration_no" placeholder="Registration Number" value="{{ old('registration_no', $student->roll_number) }}" />
                                                     @error('registration_no')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -101,14 +101,37 @@
                                         <div class="col-12">
                                             <div class="mb-1 row">
                                                 <div class="col-sm-3">
+                                                    <label class="col-form-label" for="school_id">School</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <select id="school_id" name="school_id" class="form-select @error('school_id') is-invalid @enderror">
+                                                        <option value="">-- Select School --</option>
+                                                        @if(isset($schools))
+                                                            @foreach($schools as $school)
+                                                                <option value="{{ $school->id }}" {{ old('school_id', $student->school_id) == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
+                                                            @endforeach
+                                                        @endif
+                                                    </select>
+                                                    @error('school_id')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="mb-1 row">
+                                                <div class="col-sm-3">
                                                     <label class="col-form-label" for="parent_id">Guardian</label>
                                                 </div>
                                                 <div class="col-sm-9">
                                                     <select id="parent_id" name="parent_id" class="form-select @error('parent_id') is-invalid @enderror">
                                                         <option value="">-- Select Guardian --</option>
-                                                        @foreach(\App\Models\Guardian::with('user')->get() as $g)
-                                                            <option value="{{ $g->id }}" {{ old('parent_id', $student->parent_id) == $g->id ? 'selected' : '' }}>{{ optional($g->user)->name ?? 'Guardian #'.$g->id }}</option>
-                                                        @endforeach
+                                                        @if(isset($guardians))
+                                                            @foreach($guardians as $g)
+                                                                <option value="{{ $g->id }}" {{ old('parent_id', $student->parent_id) == $g->id ? 'selected' : '' }}>{{ optional($g->user)->name ?? 'Guardian #'.$g->id }}</option>
+                                                            @endforeach
+                                                        @endif
                                                     </select>
                                                     @error('parent_id')
                                                         <div class="invalid-feedback">{{ $message }}</div>

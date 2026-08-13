@@ -24,6 +24,7 @@ $(function() {
                     { data: 'name' },
                     { data: 'roll_number' },
                     { data: 'class' },
+                    { data: 'school' },
                     { data: 'guardian' },
                     { data: 'location' },
                     { data: 'trip_status' },
@@ -90,11 +91,19 @@ $(function() {
         }
     });
 
+    // School filter
+    $('#filter-school').on('change', function() {
+        var table = getTable();
+        if (table) {
+            table.column(5).search(this.value).draw();
+        }
+    });
+
     // Guardian filter
     $('#filter-guardian').on('change', function() {
         var table = getTable();
         if (table) {
-            table.column(5).search(this.value).draw();
+            table.column(6).search(this.value).draw();
         }
     });
 
@@ -102,6 +111,7 @@ $(function() {
     $('#clear-filters').on('click', function() {
         $('#search-name').val('');
         $('#filter-class').val('').trigger('change');
+        $('#filter-school').val('').trigger('change');
         $('#filter-guardian').val('').trigger('change');
         var table = getTable();
         if (table) {
