@@ -97,6 +97,68 @@
                                             </div>
                                         </div>
 
+                                        <!-- Schedule / Pickup Timing -->
+                                        <div class="col-12">
+                                            <h5 class="mb-2 mt-3">School Schedule (Pickup Timing)</h5>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="mb-1 row">
+                                                <div class="col-sm-3">
+                                                    <label class="col-form-label" for="start_time">School Start Time</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="time" id="start_time" class="form-control @error('start_time') is-invalid @enderror" name="start_time" value="{{ old('start_time', '08:00') }}" />
+                                                    @error('start_time')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="mb-1 row">
+                                                <div class="col-sm-3">
+                                                    <label class="col-form-label" for="end_time">School End Time</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="time" id="end_time" class="form-control @error('end_time') is-invalid @enderror" name="end_time" value="{{ old('end_time', '14:00') }}" />
+                                                    @error('end_time')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="mb-1 row">
+                                                <div class="col-sm-3">
+                                                    <label class="col-form-label" for="pickup_lead_minutes">Pickup Lead (minutes)</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="number" min="0" max="240" id="pickup_lead_minutes" class="form-control @error('pickup_lead_minutes') is-invalid @enderror" name="pickup_lead_minutes" value="{{ old('pickup_lead_minutes', 45) }}" />
+                                                    <small class="text-muted">Driver should leave this many minutes before school start.</small>
+                                                    @error('pickup_lead_minutes')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="mb-1 row">
+                                                <div class="col-sm-3">
+                                                    <label class="col-form-label" for="timezone">Timezone</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="text" id="timezone" class="form-control @error('timezone') is-invalid @enderror" name="timezone" value="{{ old('timezone', 'Asia/Karachi') }}" />
+                                                    @error('timezone')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <!-- Address Information -->
                                         <div class="col-12">
                                             <h5 class="mb-2 mt-3">Address Information</h5>

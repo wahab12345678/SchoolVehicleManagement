@@ -18,7 +18,7 @@ return new class extends Migration
             $table->index(['school_id', 'created_at']);
             $table->index(['parent_id', 'created_at']);
             $table->index(['class', 'created_at']);
-            $table->index('registration_no');
+            // roll_number already has a unique index from create_students_table
         });
 
         // Guardians table indexes
@@ -76,7 +76,6 @@ return new class extends Migration
             $table->dropIndex(['school_id', 'created_at']);
             $table->dropIndex(['parent_id', 'created_at']);
             $table->dropIndex(['class', 'created_at']);
-            $table->dropIndex(['registration_no']);
         });
 
         Schema::table('guardians', function (Blueprint $table) {
