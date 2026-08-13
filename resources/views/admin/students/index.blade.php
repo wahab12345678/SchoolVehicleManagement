@@ -40,17 +40,25 @@
                             <div class="card-body">
                                 <!-- Search and Filter Controls -->
                                 <div class="row mb-3">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                                             <input type="text" id="search-name" class="form-control" placeholder="Search by name...">
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <select id="filter-class" class="form-select select2">
                                             <option value="">All Classes</option>
                                             @foreach($students->pluck('class')->unique()->filter() as $class)
                                                 <option value="{{ $class }}">{{ $class }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <select id="filter-school" class="form-select select2">
+                                            <option value="">All Schools</option>
+                                            @foreach($schools as $school)
+                                                <option value="{{ $school->name }}">{{ $school->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -89,6 +97,7 @@
                                                 <th>Name</th>
                                                 <th>Roll Number</th>
                                                 <th>Class</th>
+                                                <th>School</th>
                                                 <th>Guardian</th>
                                                 <th>Location</th>
                                                 <th>Trip Status</th>

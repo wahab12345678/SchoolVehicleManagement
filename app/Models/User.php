@@ -6,12 +6,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -63,9 +64,14 @@ class User extends Authenticatable
         return $this->hasMany(Trip::class, 'driver_id');
     }
 
+    public function deviceTokens()
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
     public function activeTrips()
     {
-        return $this->hasMany(Trip::class, 'driver_id')->whereIn('status', ['pending', 'in_progress']);
+        return $this->hasMany(Trip::class, 'driver_id')->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress']);
     }
 
     public function getIsDriverAttribute()

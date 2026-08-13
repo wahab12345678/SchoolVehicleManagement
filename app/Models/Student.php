@@ -14,7 +14,6 @@ class Student extends Model
         'school_id',
         'latitude',
         'longitude',
-        'registration_no'
     ];
 
     public function guardian()
@@ -34,7 +33,7 @@ class Student extends Model
 
     public function activeTrips()
     {
-        return $this->hasMany(Trip::class)->whereIn('status', ['pending', 'in_progress']);
+        return $this->hasMany(Trip::class)->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress']);
     }
 
     public function completedTrips()

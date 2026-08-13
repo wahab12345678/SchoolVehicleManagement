@@ -151,6 +151,10 @@ class SchoolController extends Controller
             'principal_email' => 'nullable|email',
             'principal_phone' => 'nullable|string|max:20',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
+            'timezone' => 'nullable|string|max:64',
+            'pickup_lead_minutes' => 'nullable|integer|min:0|max:240',
         ]);
 
         $data = $request->all();
@@ -203,6 +207,10 @@ class SchoolController extends Controller
             'principal_email' => 'nullable|email',
             'principal_phone' => 'nullable|string|max:20',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
+            'timezone' => 'nullable|string|max:64',
+            'pickup_lead_minutes' => 'nullable|integer|min:0|max:240',
         ]);
 
         $data = $request->all();

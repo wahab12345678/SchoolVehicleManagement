@@ -23,13 +23,18 @@ class School extends Model
         'principal_email',
         'principal_phone',
         'logo',
-        'is_active'
+        'is_active',
+        'start_time',
+        'end_time',
+        'timezone',
+        'pickup_lead_minutes',
     ];
 
     protected $casts = [
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
         'is_active' => 'boolean',
+        'pickup_lead_minutes' => 'integer',
     ];
 
     public function students()

@@ -53,7 +53,12 @@
                                         </p>
                                     </div>
                                     <div class="col-md-6">
-                                        <h5>Location</h5>
+                                        <h5>Schedule</h5>
+                                        <p><strong>Start Time:</strong> {{ $school->start_time ? \Illuminate\Support\Str::of($school->start_time)->substr(0, 5) : 'Not set' }}</p>
+                                        <p><strong>End Time:</strong> {{ $school->end_time ? \Illuminate\Support\Str::of($school->end_time)->substr(0, 5) : 'Not set' }}</p>
+                                        <p><strong>Pickup Lead:</strong> {{ $school->pickup_lead_minutes ?? 45 }} minutes</p>
+                                        <p><strong>Timezone:</strong> {{ $school->timezone ?? 'Asia/Karachi' }}</p>
+                                        <h5 class="mt-2">Location</h5>
                                         <p><strong>Address:</strong> {{ $school->full_address }}</p>
                                         <p><strong>Coordinates:</strong> {{ $school->formatted_location }}</p>
                                         @if($school->google_maps_url)
@@ -108,7 +113,7 @@
                                 <h4 class="card-title">School Logo</h4>
                             </div>
                             <div class="card-body text-center">
-                                <img src="{{ Storage::url($school->logo) }}" alt="School Logo" class="img-fluid" style="max-height: 200px;">
+                                <img src="{{ asset('storage/' . $school->logo) }}" alt="School Logo" class="img-fluid" style="max-height: 200px;">
                             </div>
                         </div>
                         @endif

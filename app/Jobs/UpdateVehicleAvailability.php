@@ -38,7 +38,7 @@ class UpdateVehicleAvailability implements ShouldQueue
 
         // Check if vehicle has active trips
         $hasActiveTrips = Trip::where('vehicle_id', $this->vehicleId)
-            ->whereIn('status', ['pending', 'in_progress'])
+            ->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress'])
             ->exists();
 
         // Update vehicle availability
@@ -53,6 +53,8 @@ class UpdateVehicleAvailability implements ShouldQueue
         Cache::forget('vehicles_list');
         
         // Clear vehicle-specific cache
-        Cache::tags(['vehicles', 'dashboard'])->flush();
+        if (Cache::supportsTags()) {
+            Cache::tags(['vehicles', 'dashboard'])->flush();
+        }
     }
 }

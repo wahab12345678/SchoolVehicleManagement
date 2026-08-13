@@ -34,6 +34,7 @@ class StudentRepository
             $rollColumn => $data['roll_number'] ?? ($data['registration_no'] ?? null),
             $classColumn => $data['class'] ?? null,
             'parent_id' => $data['parent_id'] ?? null,
+            'school_id' => $data['school_id'] ?? null,
             'latitude' => isset($data['latitude']) ? $data['latitude'] : null,
             'longitude' => isset($data['longitude']) ? $data['longitude'] : null,
         ];
@@ -69,6 +70,7 @@ class StudentRepository
             $rollColumn => $data['roll_number'] ?? ($data['registration_no'] ?? ($student->{$rollColumn} ?? null)),
             $classColumn => $data['class'] ?? ($student->{$classColumn} ?? null),
             'parent_id' => $data['parent_id'] ?? $student->parent_id,
+            'school_id' => array_key_exists('school_id', $data) ? $data['school_id'] : $student->school_id,
             'latitude' => array_key_exists('latitude', $data) ? $data['latitude'] : $student->latitude,
             'longitude' => array_key_exists('longitude', $data) ? $data['longitude'] : $student->longitude,
         ];
