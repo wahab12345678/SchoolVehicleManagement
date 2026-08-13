@@ -11,13 +11,19 @@ class TripLocation extends Model
         'trip_id',
         'latitude',
         'longitude',
-        'recorded_at'
+        'accuracy',
+        'heading',
+        'speed',
+        'recorded_at',
     ];
 
     protected $casts = [
         'latitude' => 'decimal:7',
         'longitude' => 'decimal:7',
-        'recorded_at' => 'datetime'
+        'accuracy' => 'decimal:2',
+        'heading' => 'decimal:2',
+        'speed' => 'decimal:2',
+        'recorded_at' => 'datetime',
     ];
 
     public function trip()
