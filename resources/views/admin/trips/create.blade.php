@@ -120,6 +120,8 @@
                                                 <div class="col-sm-9">
                                                     <select id="status" name="status" class="form-select @error('status') is-invalid @enderror" required>
                                                         <option value="pending" {{ old('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                                        <option value="en_route" {{ old('status') == 'en_route' ? 'selected' : '' }}>En Route (On the way)</option>
+                                                        <option value="arrived" {{ old('status') == 'arrived' ? 'selected' : '' }}>Arrived</option>
                                                         <option value="in_progress" {{ old('status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
                                                         <option value="completed" {{ old('status') == 'completed' ? 'selected' : '' }}>Completed</option>
                                                     </select>

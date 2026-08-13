@@ -28,12 +28,16 @@ class StudentController extends Controller
             ])->with([
                 'guardian:id,user_id', 
                 'guardian.user:id,name',
+                'school:id,name',
                 'activeTrips:id,student_id,status'
             ]);
 
             // If Yajra DataTables is available prefer it (keeps previous behavior)
             if (class_exists('\\Yajra\\DataTables\\Facades\\DataTables')) {
                 return \Yajra\DataTables\Facades\DataTables::of($baseQuery)
+                    ->addColumn('school', function ($row) {
+                        return optional($row->school)->name ?? 'N/A';
+                    })
                     ->addColumn('guardian', function ($row) {
                         return optional($row->guardian->user)->name ?? '';
                     })
@@ -77,6 +81,7 @@ class StudentController extends Controller
                     'name' => $row->name,
                     'roll_number' => $row->roll_number,
                     'class' => $row->class,
+                    'school' => optional($row->school)->name ?? 'N/A',
                     'guardian' => optional($row->guardian->user)->name ?? '',
                     'location' => ($row->latitude && $row->longitude) ? $row->latitude . ', ' . $row->longitude : 'Not set',
                     'trip_status' => $tripStatus,
@@ -114,6 +119,7 @@ class StudentController extends Controller
                     'name' => $row->name,
                     'roll_number' => $row->roll_number,
                     'class' => $row->class,
+                    'school' => optional($row->school)->name ?? 'N/A',
                     'guardian' => optional($row->guardian->user)->name ?? '',
                     'location' => ($row->latitude && $row->longitude) ? $row->latitude . ', ' . $row->longitude : 'Not set',
                     'trip_status' => $tripStatus,
@@ -129,16 +135,18 @@ class StudentController extends Controller
             ]);
         }
 
-        $students = Student::with('guardian.user')->get(); // For filter dropdowns
+        $students = Student::with('guardian.user', 'school')->get(); // For filter dropdowns
         $guardians = \App\Models\Guardian::with('user')->get(); // For filter dropdowns
+        $schools = \App\Models\School::orderBy('name')->get(); // For filter dropdowns
 
-        return view('admin.students.index', compact('students', 'guardians'));
+        return view('admin.students.index', compact('students', 'guardians', 'schools'));
     }
 
     public function create()
     {
         $guardians = \App\Models\Guardian::with('user')->get();
-        return view('admin.students.create', compact('guardians'));
+        $schools = \App\Models\School::orderBy('name')->get();
+        return view('admin.students.create', compact('guardians', 'schools'));
     }
 
     public function store(StoreStudentRequest $request)
@@ -192,7 +200,9 @@ class StudentController extends Controller
             return response()->json($student->load('guardian.user'));
         }
 
-        return view('admin.students.edit', compact('student'));
+        $guardians = \App\Models\Guardian::with('user')->get();
+        $schools = \App\Models\School::orderBy('name')->get();
+        return view('admin.students.edit', compact('student', 'guardians', 'schools'));
     }
 
     public function update(UpdateStudentRequest $request, $id)

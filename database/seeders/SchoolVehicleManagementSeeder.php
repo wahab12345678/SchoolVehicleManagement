@@ -113,7 +113,6 @@ class SchoolVehicleManagementSeeder extends Seeder
         ];
 
         foreach ($students as $index => $studentData) {
-            $studentData['registration_no'] = $studentData['roll_number']; // Add registration_no field
             $studentData['parent_id'] = $guardianRecords[$index % count($guardianRecords)]->id; // Assign guardian cyclically
             Student::firstOrCreate(
                 ['roll_number' => $studentData['roll_number']],
