@@ -74,7 +74,7 @@ class SchoolController extends Controller
 
                     $studentsBadge = '<span class="badge bg-primary">' . $school->students->count() . '</span>';
                     $vehiclesBadge = '<span class="badge bg-success">' . $school->vehicles->count() . '</span>';
-                    
+
                     $status = $school->is_active ? 'success' : 'secondary';
                     $statusText = $school->is_active ? 'Active' : 'Inactive';
                     $statusBadge = '<span class="badge bg-' . $status . '">' . $statusText . '</span>';
@@ -221,7 +221,7 @@ class SchoolController extends Controller
             if ($school->logo && Storage::disk('public')->exists($school->logo)) {
                 Storage::disk('public')->delete($school->logo);
             }
-            
+
             $logoPath = $request->file('logo')->store('schools/logos', 'public');
             $data['logo'] = $logoPath;
         }
