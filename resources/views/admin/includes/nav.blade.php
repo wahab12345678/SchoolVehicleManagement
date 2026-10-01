@@ -200,17 +200,13 @@
                 </ul>
             </li> --}}
             <li class="nav-item dropdown dropdown-user"><a class="nav-link dropdown-toggle dropdown-user-link" id="dropdown-user" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%); border-radius: 12px; padding: 0.5rem 1rem; transition: all 0.3s ease; border: 1px solid rgba(99, 102, 241, 0.2);">
-                    <div class="user-nav d-sm-flex d-none"><span class="user-name fw-bolder" style="color: #1f2937;">{{Auth::user()->name}}</span><span class="user-status" style="color: #6366f1; font-weight: 500;">{{ ucfirst(Auth::user()->getRoleNames()->first()) }}</span></div><span class="avatar"><img class="round" src="../../../app-assets/images/portrait/small/avatar-s-11.jpg" alt="avatar" height="40" width="40" style="border: 2px solid #6366f1;"><span class="avatar-status-online" style="background: #10b981; border: 2px solid #ffffff;"></span></span>
+                    <div class="user-nav d-sm-flex d-none"><span class="user-name fw-bolder" style="color: #1f2937;">{{Auth::user()->name}}</span><span class="user-status" style="color: #6366f1; font-weight: 500;">{{ ucfirst(Auth::user()->getRoleNames()->first() ?? 'User') }}</span></div><span class="avatar"><img class="round user-avatar-image" src="{{ Auth::user()->avatar_url }}" alt="{{ Auth::user()->name }}" height="40" width="40" style="border: 2px solid #6366f1; object-fit: cover;" data-user-avatar><span class="avatar-status-online" style="background: #10b981; border: 2px solid #ffffff;"></span></span>
                 </a>
-                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); padding: 1rem;">
-                    {{-- <a class="dropdown-item" href="page-profile.html"><i class="me-50" data-feather="user"></i> Profile</a>
-                    <a class="dropdown-item" href="app-email.html"><i class="me-50" data-feather="mail"></i> Inbox</a>
-                    <a class="dropdown-item" href="app-todo.html"><i class="me-50" data-feather="check-square"></i> Task</a>
-                    <a class="dropdown-item" href="app-chat.html"><i class="me-50" data-feather="message-square"></i> Chats</a> --}}
-                    {{-- <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="page-account-settings-account.html"><i class="me-50" data-feather="settings"></i> Settings</a>
-                    <a class="dropdown-item" href="page-pricing.html"><i class="me-50" data-feather="credit-card"></i> Pricing</a>
-                    <a class="dropdown-item" href="page-faq.html"><i class="me-50" data-feather="help-circle"></i> FAQ</a> --}}
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); padding: 1rem; min-width: 190px;">
+                    <a class="dropdown-item trigger-change-photo" href="javascript:void(0);" style="color: #4b5563; font-weight: 500; padding: 0.75rem 1rem; border-radius: 8px; transition: all 0.3s ease; display: flex; align-items: center; margin-bottom: 0.5rem;">
+                        <i class="me-50" data-feather="camera" style="color: #6366f1;"></i> Change Photo
+                    </a>
+                    <div class="dropdown-divider" style="margin: 0.5rem 0; border-top: 1px solid rgba(99, 102, 241, 0.1);"></div>
                     <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" style="color: #ef4444; font-weight: 500; padding: 0.75rem 1rem; border-radius: 8px; transition: all 0.3s ease; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1);">
                         <i class="me-50" data-feather="power" style="color: #ef4444;"></i> Logout
                     </a>
