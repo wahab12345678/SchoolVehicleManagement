@@ -10,13 +10,48 @@
             </div>
         </div>
         <div class="content-body">
-            <!-- Welcome Message -->
+            <!-- Guardian Profile & Welcome Section -->
             <div class="row">
                 <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4>Welcome, {{ Auth::user()->name }}!</h4>
-                            <p class="text-muted">Track your children's transportation and stay updated with their trips.</p>
+                    <div class="card" style="border: 1px solid rgba(99, 102, 241, 0.15); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border-radius: 12px; overflow: hidden;">
+                        <div class="card-body p-2 p-md-3">
+                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="position-relative me-2 me-md-3">
+                                        <img src="{{ Auth::user()->avatar_url }}" 
+                                             alt="{{ Auth::user()->name }}" 
+                                             class="round user-avatar-image shadow-sm" 
+                                             width="72" 
+                                             height="72" 
+                                             style="object-fit: cover; border: 3px solid #6366f1; border-radius: 50%;" 
+                                             data-user-avatar>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-icon btn-primary rounded-circle position-absolute bottom-0 end-0 trigger-change-photo" 
+                                                title="Change Photo" 
+                                                style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4); border: 2px solid #ffffff;">
+                                            <i data-feather="camera" style="width: 14px; height: 14px;"></i>
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center flex-wrap gap-1 mb-25">
+                                            <h4 class="mb-0 fw-bolder" style="color: #1f2937;">{{ Auth::user()->name }}</h4>
+                                            <span class="badge badge-light-primary">Guardian</span>
+                                        </div>
+                                        <p class="text-muted small mb-25">
+                                            <span><i data-feather="mail" style="width: 12px; height: 12px;" class="me-25"></i>{{ Auth::user()->email }}</span>
+                                            @if(Auth::user()->phone)
+                                                <span class="ms-2"><i data-feather="phone" style="width: 12px; height: 12px;" class="me-25"></i>{{ Auth::user()->phone }}</span>
+                                            @endif
+                                        </p>
+                                        <p class="text-muted small mb-0">Track your children's transportation and stay updated with their trips.</p>
+                                    </div>
+                                </div>
+                                <div class="mt-2 mt-md-0 d-flex align-items-center">
+                                    <button type="button" class="btn btn-outline-primary btn-sm trigger-change-photo d-inline-flex align-items-center" style="border-radius: 8px;">
+                                        <i data-feather="camera" class="me-50" style="width: 15px; height: 15px;"></i> Change Photo
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

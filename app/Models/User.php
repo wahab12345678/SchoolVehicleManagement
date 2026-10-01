@@ -24,6 +24,16 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'avatar',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'avatar_url',
     ];
 
     /**
@@ -82,5 +92,30 @@ class User extends Authenticatable
     public function getIsGuardianAttribute()
     {
         return $this->hasRole('guardian');
+    }
+
+    /**
+     * Get the user's avatar URL.
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        if (!empty($this->avatar)) {
+            if (filter_var($this->avatar, FILTER_VALIDATE_URL)) {
+                return $this->avatar;
+            }
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($this->avatar)) {
+                return asset('storage/' . ltrim($this->avatar, '/'));
+            }
+        }
+
+        return asset('app-assets/images/portrait/small/avatar-s-11.jpg');
+    }
+
+    /**
+     * Alias for avatar URL.
+     */
+    public function getProfilePictureUrlAttribute(): string
+    {
+        return $this->avatar_url;
     }
 }

@@ -49,9 +49,10 @@
                 width: 14,
                 height: 14
             });
-        }
-    })
+    });
 </script>
+
+@include('components.profile-photo-modal')
 </body>
 <!-- END: Body-->
 

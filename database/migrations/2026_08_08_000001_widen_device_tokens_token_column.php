@@ -7,11 +7,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('ALTER TABLE device_tokens MODIFY token VARCHAR(512) NOT NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE device_tokens MODIFY token VARCHAR(512) NOT NULL');
+        }
     }
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE device_tokens MODIFY token VARCHAR(255) NOT NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE device_tokens MODIFY token VARCHAR(255) NOT NULL');
+        }
     }
 };
