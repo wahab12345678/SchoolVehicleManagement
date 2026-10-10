@@ -99,7 +99,9 @@ class Trip extends Model
 
     public function locations()
     {
-        return $this->hasMany(TripLocation::class)->orderBy('recorded_at');
+        // Do NOT default-order ASC here — it breaks latest('recorded_at')->first()
+        // (MySQL keeps the first ORDER BY on the same column → returns oldest row).
+        return $this->hasMany(TripLocation::class);
     }
 
     public function getDurationAttribute()
@@ -117,7 +119,7 @@ class Trip extends Model
 
     public function getCurrentLocationAttribute()
     {
-        return $this->locations()->latest('recorded_at')->first();
+        return $this->locations()->reorder()->latest('recorded_at')->latest('id')->first();
     }
 
     public function scopeActive($query)
