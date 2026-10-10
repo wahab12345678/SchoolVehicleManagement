@@ -82,7 +82,12 @@ class TripController extends Controller
         $this->authorizeTrip($guardian, $trip);
 
         $trip->loadMissing(['student.school', 'school']);
-        $location = $trip->locations()->latest('recorded_at')->first();
+        // reorder() clears any inherited order so we truly get the newest GPS point.
+        $location = $trip->locations()
+            ->reorder()
+            ->latest('recorded_at')
+            ->latest('id')
+            ->first();
         $school = $trip->school ?? $trip->student?->school;
 
         return response()->json([
@@ -127,7 +132,9 @@ class TripController extends Controller
         $this->authorizeTrip($guardian, $trip);
 
         $locations = $trip->locations()
+            ->reorder()
             ->orderBy('recorded_at')
+            ->orderBy('id')
             ->get(['id', 'latitude', 'longitude', 'accuracy', 'heading', 'speed', 'recorded_at']);
 
         return response()->json(['data' => $locations]);
