@@ -1,6 +1,7 @@
 @extends('admin.includes.main')
 @section('header')
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 @endsection
 
 @section('content')
@@ -235,38 +236,12 @@
                                             </div>
                                         </div>
 
-                                        <!-- GPS Coordinates -->
-                                        <div class="col-12">
-                                            <h5 class="mb-2 mt-3">GPS Coordinates (Optional)</h5>
-                                        </div>
-
-                                        <div class="col-12">
-                                            <div class="mb-1 row">
-                                                <div class="col-sm-3">
-                                                    <label class="col-form-label" for="latitude">Latitude</label>
-                                                </div>
-                                                <div class="col-sm-9">
-                                                    <input type="number" step="any" id="latitude" class="form-control @error('latitude') is-invalid @enderror" name="latitude" placeholder="Latitude (e.g. 31.5204)" value="{{ old('latitude', $school->latitude) }}" />
-                                                    @error('latitude')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-12">
-                                            <div class="mb-1 row">
-                                                <div class="col-sm-3">
-                                                    <label class="col-form-label" for="longitude">Longitude</label>
-                                                </div>
-                                                <div class="col-sm-9">
-                                                    <input type="number" step="any" id="longitude" class="form-control @error('longitude') is-invalid @enderror" name="longitude" placeholder="Longitude (e.g. 74.3587)" value="{{ old('longitude', $school->longitude) }}" />
-                                                    @error('longitude')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
+                                        @include('admin.partials.gps-location-picker', [
+                                            'title' => 'School GPS Location',
+                                            'help' => 'School ka location set karo — manually type karo ya map pe click karo. Guardian app mein school pin yahan se aayega.',
+                                            'latitude' => old('latitude', $school->latitude),
+                                            'longitude' => old('longitude', $school->longitude),
+                                        ])
 
                                         <!-- Principal Information -->
                                         <div class="col-12">
@@ -369,4 +344,8 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('footer')
+@include('admin.partials.gps-location-picker-scripts')
 @endsection

@@ -55,6 +55,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         
         // School Management
         Route::resource('school', App\Http\Controllers\Admin\SchoolController::class)->names('admin.school');
+
+        // Place search for map picker (OpenStreetMap Nominatim proxy)
+        Route::get('/geocode/search', [App\Http\Controllers\Admin\GeocodeController::class, 'search'])
+            ->name('admin.geocode.search');
     });
 });
 

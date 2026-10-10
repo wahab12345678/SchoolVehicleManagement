@@ -143,14 +143,26 @@ class TripController extends Controller
             ], 422);
         }
 
-        $data = $request->validate([
+        $input = $request->all();
+        // Mobile GPS often sends heading=-1 when unavailable.
+        if (isset($input['heading']) && (!is_numeric($input['heading']) || $input['heading'] < 0 || $input['heading'] > 360)) {
+            unset($input['heading']);
+        }
+        if (isset($input['speed']) && (!is_numeric($input['speed']) || $input['speed'] < 0)) {
+            unset($input['speed']);
+        }
+        if (isset($input['accuracy']) && (!is_numeric($input['accuracy']) || $input['accuracy'] < 0)) {
+            unset($input['accuracy']);
+        }
+
+        $data = validator($input, [
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'nullable|numeric|min:0',
             'heading' => 'nullable|numeric|between:0,360',
             'speed' => 'nullable|numeric|min:0',
             'recorded_at' => 'nullable|date',
-        ]);
+        ])->validate();
 
         $location = TripLocation::create([
             'trip_id' => $trip->id,
