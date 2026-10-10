@@ -2,10 +2,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node api.js && vite build",
+    "build": "node init && vite build",
     "build:optimized": "vite build --mode production --minify",
     "build:analyze": "vite build --mode production --analyze",
-    "dev": "node api.js && vite",
+    "dev": "node init && vite",
     "dev:fast": "vite --force",
     "preview": "vite preview",
     "optimize": "npm run build:optimized && npm run cache:clear",
