@@ -14,10 +14,27 @@ class GuardianTrackingController extends Controller
 
     public function index()
     {
-        $guardian = Guardian::where('user_id', Auth::id())->first();
+
+
+        $user = Auth::user();
+        $guardian = Guardian::where('user_id', $user->id)->first();
         
         if (!$guardian) {
-            return redirect()->route('home')->with('error', 'Guardian profile not found.');
+            if ($user->hasRole('admin')) {
+                $students = Student::with(['trips' => function($query) {
+                    $query->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress'])->with(['vehicle.driver', 'route', 'locations' => function($q) {
+                        $q->latest('recorded_at')->limit(1);
+                    }]);
+                }])->get();
+                return view('guardian.tracking.index', compact('students'));
+            } elseif ($user->hasAnyRole(['guardian', 'parent'])) {
+                $guardian = Guardian::firstOrCreate(
+                    ['user_id' => $user->id],
+                    ['address' => '']
+                );
+            } else {
+                return redirect()->route('guardian.dashboard')->with('error', 'Guardian profile not found.');
+            }
         }
 
         $students = $guardian->students()->with(['trips' => function($query) {
@@ -133,17 +150,31 @@ class GuardianTrackingController extends Controller
 
     public function trackMap($tripId)
     {
-        $guardian = Guardian::where('user_id', Auth::id())->first();
+        $user = Auth::user();
+        $guardian = Guardian::where('user_id', $user->id)->first();
         
-        if (!$guardian) {
-            return redirect()->route('home')->with('error', 'Guardian profile not found.');
+        if (!$guardian && !$user->hasRole('admin')) {
+            if ($user->hasAnyRole(['guardian', 'parent'])) {
+                $guardian = Guardian::firstOrCreate(
+                    ['user_id' => $user->id],
+                    ['address' => '']
+                );
+            } else {
+                return redirect()->route('guardian.dashboard')->with('error', 'Guardian profile not found.');
+            }
         }
 
-        $trip = Trip::whereHas('student', function($query) use ($guardian) {
-            $query->where('parent_id', $guardian->id);
-        })->with(['student', 'vehicle.driver', 'route', 'locations' => function($q) {
+        $tripQuery = Trip::with(['student', 'vehicle.driver', 'route', 'locations' => function($q) {
             $q->orderBy('recorded_at', 'desc')->limit(100);
-        }])->find($tripId);
+        }]);
+
+        if ($guardian) {
+            $tripQuery->whereHas('student', function($query) use ($guardian) {
+                $query->where('parent_id', $guardian->id);
+            });
+        }
+
+        $trip = $tripQuery->find($tripId);
 
         if (!$trip) {
             return redirect()->route('guardian.tracking.index')->with('error', 'Trip not found.');

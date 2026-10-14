@@ -22,7 +22,7 @@ class AuthService
             $user = Auth::user(); // Get the authenticated user
             
             // Check if the user has any of the allowed roles
-            if ($user->hasAnyRole(['admin', 'guardian', 'driver'])) {
+            if ($user->hasAnyRole(['admin', 'guardian', 'parent', 'driver'])) {
                 return [
                     'success' => true,
                     'message' => 'Login successful.',

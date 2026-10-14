@@ -11,6 +11,11 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && ($user->hasRole('guardian') || $user->hasRole('parent')) && !$user->hasRole('admin')) {
+            return redirect()->route('guardian.dashboard');
+        }
+
         // Get dashboard statistics with caching for better performance
         $stats = Cache::remember('dashboard_stats_optimized', 300, function () {
             return [

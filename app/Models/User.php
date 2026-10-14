@@ -24,6 +24,7 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+
         'avatar',
     ];
 
@@ -82,6 +83,21 @@ class User extends Authenticatable
     public function activeTrips()
     {
         return $this->hasMany(Trip::class, 'driver_id')->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress']);
+    }
+
+    public function serviceAreas()
+    {
+        return $this->hasMany(DriverServiceArea::class, 'driver_id');
+    }
+
+    public function activeServiceAreas()
+    {
+        return $this->hasMany(DriverServiceArea::class, 'driver_id')->where('is_active', true);
+    }
+
+    public function primaryVehicle()
+    {
+        return $this->hasOne(Vehicle::class, 'driver_id');
     }
 
     public function getIsDriverAttribute()

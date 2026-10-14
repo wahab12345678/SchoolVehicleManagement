@@ -14,7 +14,7 @@ class ProfileController extends Controller
     /**
      * Update the authenticated user's profile photo.
      *
-     * @param Request $request
+    * @param Request $request
      * @return JsonResponse|RedirectResponse
      */
     public function updatePhoto(Request $request): JsonResponse|RedirectResponse

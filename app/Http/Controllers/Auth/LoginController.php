@@ -38,6 +38,7 @@ class LoginController extends Controller
                 case 'admin':
                     return redirect()->route('admin.dashboard')->with('success', $result['message']);
                 case 'guardian':
+                case 'parent':
                     return redirect()->route('guardian.dashboard')->with('success', $result['message']);
                 case 'driver':
                     return redirect()->route('admin.dashboard')->with('success', $result['message']); // Drivers can access admin dashboard for now

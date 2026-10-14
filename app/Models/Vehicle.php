@@ -10,6 +10,7 @@ class Vehicle extends Model
         'number_plate',
         'model',
         'type',
+        'capacity',
         'driver_id',
         'school_id',
         'is_available',
@@ -17,9 +18,24 @@ class Vehicle extends Model
         'notes'
     ];
 
+    public function getCapacityAttribute($value)
+    {
+        if (!empty($value)) {
+            return (int) $value;
+        }
+
+        return match (strtolower($this->type ?? '')) {
+            'rickshaw' => 4,
+            'car' => 4,
+            'van' => 14,
+            'bus' => 30,
+            default => 10,
+        };
+    }
+
     public function driver()
     {
-        return $this->belongsTo(User::class, 'driver_id');
+        return $this->belongsTo(Driver::class, 'driver_id');
     }
 
     public function school()

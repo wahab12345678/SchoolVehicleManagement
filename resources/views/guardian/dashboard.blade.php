@@ -46,7 +46,10 @@
                                         <p class="text-muted small mb-0">Track your children's transportation and stay updated with their trips.</p>
                                     </div>
                                 </div>
-                                <div class="mt-2 mt-md-0 d-flex align-items-center">
+                                <div class="mt-2 mt-md-0 d-flex align-items-center gap-1">
+                                    <a href="{{ route('guardian.riders.index') }}" class="btn btn-primary btn-sm d-inline-flex align-items-center" style="border-radius: 8px;">
+                                        <i data-feather="search" class="me-50" style="width: 15px; height: 15px;"></i> Find a Rider
+                                    </a>
                                     <button type="button" class="btn btn-outline-primary btn-sm trigger-change-photo d-inline-flex align-items-center" style="border-radius: 8px;">
                                         <i data-feather="camera" class="me-50" style="width: 15px; height: 15px;"></i> Change Photo
                                     </button>
@@ -61,8 +64,11 @@
             <div class="row">
                 <div class="col-12">
                     <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">My Children</h4>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4 class="card-title mb-0">My Children</h4>
+                            <a href="{{ route('guardian.riders.index') }}" class="btn btn-sm btn-outline-primary">
+                                <i data-feather="search" class="me-25"></i> Find / Change Driver
+                            </a>
                         </div>
                         <div class="card-body">
                             @if($students->count() > 0)
@@ -75,18 +81,30 @@
                                                 <p class="card-text">
                                                     <strong>Roll Number:</strong> {{ $student->roll_number }}<br>
                                                     <strong>Class:</strong> {{ $student->class ?? 'Not specified' }}<br>
+                                                    <strong>Assigned Rider:</strong> 
+                                                    @if($student->driver)
+                                                        <span class="text-success fw-bold">{{ $student->driver->name }}</span>
+                                                    @else
+                                                        <span class="text-danger">None</span>
+                                                    @endif
+                                                    <br>
                                                     <strong>Location:</strong> 
                                                     @if($student->latitude && $student->longitude)
-                                                        <a href="https://www.google.com/maps?q={{ $student->latitude }},{{ $student->longitude }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                            <i data-feather="map-pin"></i> View on Map
+                                                        <a href="https://www.google.com/maps?q={{ $student->latitude }},{{ $student->longitude }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-50" style="font-size: 0.75rem;">
+                                                            <i data-feather="map-pin"></i> View
                                                         </a>
                                                     @else
                                                         Not set
                                                     @endif
                                                 </p>
-                                                <a href="{{ route('guardian.tracking.index') }}" class="btn btn-primary btn-sm">
-                                                    <i data-feather="navigation"></i> Track Trips
-                                                </a>
+                                                <div class="d-flex gap-1 flex-wrap">
+                                                    <a href="{{ route('guardian.tracking.index') }}" class="btn btn-primary btn-sm">
+                                                        <i data-feather="navigation"></i> Track Trips
+                                                    </a>
+                                                    <a href="{{ route('guardian.riders.index') }}" class="btn btn-outline-primary btn-sm">
+                                                        <i data-feather="user-plus"></i> {{ $student->driver ? 'Change Rider' : 'Find Rider' }}
+                                                    </a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
