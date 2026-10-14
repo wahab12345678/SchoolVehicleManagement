@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> fca6be3bfb651f8864591ac3d88e61ae18dc37c1
 <?php
 
 use Illuminate\Database\Migrations\Migration;

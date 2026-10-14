@@ -46,14 +46,10 @@
                                         <p class="text-muted small mb-0">Track your children's transportation and stay updated with their trips.</p>
                                     </div>
                                 </div>
-<<<<<<< HEAD
                                 <div class="mt-2 mt-md-0 d-flex align-items-center gap-1">
                                     <a href="{{ route('guardian.riders.index') }}" class="btn btn-primary btn-sm d-inline-flex align-items-center" style="border-radius: 8px;">
                                         <i data-feather="search" class="me-50" style="width: 15px; height: 15px;"></i> Find a Rider
                                     </a>
-=======
-                                <div class="mt-2 mt-md-0 d-flex align-items-center">
->>>>>>> fca6be3bfb651f8864591ac3d88e61ae18dc37c1
                                     <button type="button" class="btn btn-outline-primary btn-sm trigger-change-photo d-inline-flex align-items-center" style="border-radius: 8px;">
                                         <i data-feather="camera" class="me-50" style="width: 15px; height: 15px;"></i> Change Photo
                                     </button>
