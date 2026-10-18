@@ -24,10 +24,8 @@ class GuardianTrackingController extends Controller
             return redirect()->route('home')->with('error', 'Guardian profile not found.');
         }
 
-        $students = $guardian->students()->with(['trips' => function($query) {
-            $query->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress'])->with(['vehicle.driver', 'route', 'locations' => function($q) {
-                $q->latest('recorded_at')->limit(1);
-            }]);
+        $students = $guardian->students()->with(['trips' => function ($query) {
+            $query->active()->with(['vehicle.driver', 'route'])->latest();
         }])->get();
 
         return view('guardian.tracking.index', compact('students'));

@@ -74,11 +74,12 @@ class TripNotificationService
         }
 
         $studentName = $trip->student?->name ?? 'your child';
+        $destination = $trip->direction === 'from_school' ? 'home' : 'school';
 
         $this->notifyGuardian(
             $trip,
             'Trip completed',
-            "{$studentName} has reached school safely. Trip completed.",
+            "{$studentName} has reached {$destination} safely. Trip completed.",
             'completed'
         );
 

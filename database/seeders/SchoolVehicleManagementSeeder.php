@@ -18,6 +18,10 @@ class SchoolVehicleManagementSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->environment('production')) {
+            throw new \RuntimeException('Refusing to run demo seeders in production.');
+        }
+
         // Create roles if they don't exist
         $roles = ['admin', 'guardian', 'driver', 'student'];
         foreach ($roles as $roleName) {

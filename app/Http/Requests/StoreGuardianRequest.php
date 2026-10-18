@@ -27,7 +27,7 @@ class StoreGuardianRequest extends FormRequest
             'email' => ['required', 'email', Rule::unique('users', 'email')],
             'phone' => 'required|string|max:20',
             // Password required on create and must be confirmed
-            'password' => 'required|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed',
             'cnic' => ['required', 'string', 'max:15', Rule::unique('guardians', 'cnic')],
             'address' => 'nullable|string|max:255',
         ];

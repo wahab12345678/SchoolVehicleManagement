@@ -8,16 +8,22 @@ use App\Models\Student;
 use App\Models\Vehicle;
 use App\Models\Route;
 use App\Models\TripLocation;
+use App\Services\TripAssignmentService;
+use App\Services\TripNotificationService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class TripController extends Controller
 {
+    public function __construct(
+        private TripAssignmentService $assignments,
+        private TripNotificationService $notifier,
+    ) {
+    }
+
     public function index(Request $request)
     {
-        $query = Trip::with(['student.guardian.user', 'vehicle.driver', 'route', 'school', 'locations' => function($q) {
-            $q->latest('recorded_at')->limit(1);
-        }]);
+        $query = Trip::with(['student.guardian.user', 'vehicle.driver', 'route', 'school']);
 
         // Filter by status
         if ($request->has('status') && $request->status !== '') {
@@ -65,7 +71,7 @@ class TripController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $input = $request->validate([
             'student_id' => 'required|exists:students,id',
             'vehicle_id' => 'required|exists:vehicles,id',
             'route_id' => 'required|exists:routes,id',
@@ -74,7 +80,7 @@ class TripController extends Controller
             'direction' => 'nullable|in:to_school,from_school',
         ]);
 
-        $trip = Trip::create($request->all());
+        $trip = Trip::create($this->assignments->prepare($input));
 
         if ($request->ajax()) {
             return response()->json(['success' => true, 'message' => 'Trip created successfully', 'data' => $trip->load(['student.guardian.user', 'vehicle.driver', 'route'])]);
@@ -110,7 +116,7 @@ class TripController extends Controller
 
     public function update(Request $request, Trip $trip)
     {
-        $request->validate([
+        $input = $request->validate([
             'student_id' => 'required|exists:students,id',
             'vehicle_id' => 'required|exists:vehicles,id',
             'route_id' => 'required|exists:routes,id',
@@ -119,7 +125,12 @@ class TripController extends Controller
             'direction' => 'nullable|in:to_school,from_school',
         ]);
 
-        $trip->update($request->all());
+        $previousStatus = $trip->status;
+        $trip->update($this->assignments->prepare($input, $trip));
+
+        if ($previousStatus !== $trip->status) {
+            $this->notifyStatus($trip);
+        }
 
         if ($request->ajax()) {
             return response()->json(['success' => true, 'message' => 'Trip updated successfully', 'data' => $trip->fresh()]);
@@ -141,30 +152,63 @@ class TripController extends Controller
 
     public function start(Trip $trip)
     {
-        $trip->update([
-            'status' => 'in_progress',
-            'started_at' => Carbon::now()
-        ]);
-
-        if (request()->ajax()) {
-            return response()->json(['success' => true, 'message' => 'Trip started successfully']);
+        if ($trip->status !== 'pending') {
+            return $this->transitionError('Pickup can only start from a pending trip.');
         }
 
-        return redirect()->back()->with('success', 'Trip started successfully.');
+        $trip->update([
+            'status' => 'en_route',
+            'pickup_started_at' => Carbon::now(),
+        ]);
+        $this->notifyStatus($trip);
+
+        if (request()->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Pickup started. Guardian notified.']);
+        }
+
+        return redirect()->back()->with('success', 'Pickup started. Guardian notified.');
     }
 
     public function complete(Trip $trip)
     {
+        if ($trip->status !== 'in_progress') {
+            return $this->transitionError('A trip can only be completed after the student has boarded.');
+        }
+
         $trip->update([
             'status' => 'completed',
-            'ended_at' => Carbon::now()
+            'ended_at' => Carbon::now(),
+            'started_at' => $trip->started_at ?? $trip->boarded_at ?? Carbon::now(),
         ]);
+        $this->notifyStatus($trip);
 
         if (request()->ajax()) {
             return response()->json(['success' => true, 'message' => 'Trip completed successfully']);
         }
 
         return redirect()->back()->with('success', 'Trip completed successfully.');
+    }
+
+    private function notifyStatus(Trip $trip): void
+    {
+        $trip = $trip->fresh(['student.guardian.user', 'driver']);
+
+        match ($trip->status) {
+            'en_route' => $this->notifier->notifyPickupStarted($trip),
+            'arrived' => $this->notifier->notifyArrived($trip),
+            'in_progress' => $this->notifier->notifyBoarded($trip),
+            'completed' => $this->notifier->notifyCompleted($trip),
+            default => null,
+        };
+    }
+
+    private function transitionError(string $message)
+    {
+        if (request()->ajax()) {
+            return response()->json(['message' => $message], 422);
+        }
+
+        return redirect()->back()->with('error', $message);
     }
 
     public function addLocation(Request $request, Trip $trip)
