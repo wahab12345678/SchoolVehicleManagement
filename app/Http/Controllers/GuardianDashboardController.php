@@ -23,7 +23,7 @@ class GuardianDashboardController extends Controller
         
         // Get active trips for guardian's students
         $activeTrips = Trip::whereIn('student_id', $students->pluck('id'))
-            ->whereIn('status', ['pending', 'in_progress'])
+            ->active()
             ->with(['student', 'vehicle', 'route'])
             ->get();
 

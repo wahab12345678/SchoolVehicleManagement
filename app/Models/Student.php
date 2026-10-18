@@ -33,7 +33,7 @@ class Student extends Model
 
     public function activeTrips()
     {
-        return $this->hasMany(Trip::class)->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress']);
+        return $this->hasMany(Trip::class)->whereIn('status', Trip::ACTIVE_STATUSES);
     }
 
     public function completedTrips()

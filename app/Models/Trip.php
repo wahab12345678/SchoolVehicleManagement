@@ -7,6 +7,15 @@ use Carbon\Carbon;
 
 class Trip extends Model
 {
+    public const ACTIVE_STATUSES = ['pending', 'en_route', 'arrived', 'in_progress'];
+
+    public const STATUS_FLOW = [
+        'pending' => 'en_route',
+        'en_route' => 'arrived',
+        'arrived' => 'in_progress',
+        'in_progress' => 'completed',
+    ];
+
     protected $fillable = [
         'vehicle_id',
         'route_id',
@@ -114,7 +123,16 @@ class Trip extends Model
 
     public function getIsActiveAttribute()
     {
-        return in_array($this->status, ['pending', 'en_route', 'arrived', 'in_progress']);
+        return in_array($this->status, self::ACTIVE_STATUSES, true);
+    }
+
+    public function canTransitionTo(string $status): bool
+    {
+        if ($this->status === $status) {
+            return true;
+        }
+
+        return (self::STATUS_FLOW[$this->status] ?? null) === $status;
     }
 
     public function getCurrentLocationAttribute()
@@ -124,7 +142,7 @@ class Trip extends Model
 
     public function scopeActive($query)
     {
-        return $query->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress']);
+        return $query->whereIn('status', self::ACTIVE_STATUSES);
     }
 
     public function scopeCompleted($query)
