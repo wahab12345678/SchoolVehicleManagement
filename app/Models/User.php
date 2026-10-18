@@ -71,7 +71,7 @@ class User extends Authenticatable
 
     public function activeTrips()
     {
-        return $this->hasMany(Trip::class, 'driver_id')->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress']);
+        return $this->hasMany(Trip::class, 'driver_id')->whereIn('status', Trip::ACTIVE_STATUSES);
     }
 
     public function getIsDriverAttribute()

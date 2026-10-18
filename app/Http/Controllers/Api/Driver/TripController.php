@@ -68,7 +68,7 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
-        if (!in_array($trip->status, ['en_route', 'pending'], true)) {
+        if ($trip->status !== 'en_route') {
             return $this->invalidTransition($trip, 'en_route');
         }
 
@@ -90,7 +90,7 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
-        if (!in_array($trip->status, ['arrived', 'en_route'], true)) {
+        if ($trip->status !== 'arrived') {
             return $this->invalidTransition($trip, 'arrived');
         }
 
@@ -114,7 +114,7 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
-        if (!in_array($trip->status, ['in_progress', 'arrived', 'en_route'], true)) {
+        if ($trip->status !== 'in_progress') {
             return $this->invalidTransition($trip, 'in_progress');
         }
 
@@ -164,6 +164,13 @@ class TripController extends Controller
             'recorded_at' => 'nullable|date',
         ])->validate();
 
+        $recordedAt = now();
+        if (!empty($data['recorded_at'])) {
+            $candidate = \Carbon\Carbon::parse($data['recorded_at']);
+            $withinWindow = $candidate->between(now()->subDay(), now()->addMinutes(2));
+            $recordedAt = $withinWindow ? $candidate : now();
+        }
+
         $location = TripLocation::create([
             'trip_id' => $trip->id,
             'latitude' => $data['latitude'],
@@ -171,7 +178,7 @@ class TripController extends Controller
             'accuracy' => $data['accuracy'] ?? null,
             'heading' => $data['heading'] ?? null,
             'speed' => $data['speed'] ?? null,
-            'recorded_at' => $data['recorded_at'] ?? now(),
+            'recorded_at' => $recordedAt,
         ]);
 
         return response()->json([

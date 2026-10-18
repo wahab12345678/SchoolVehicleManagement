@@ -12,6 +12,10 @@ class InitialSetupSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->environment('production')) {
+            throw new \RuntimeException('Refusing to run demo seeders in production.');
+        }
+
         // Disable foreign key checks
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         // Truncate tables
