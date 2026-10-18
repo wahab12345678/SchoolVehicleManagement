@@ -31,7 +31,7 @@ class UpdateGuardianRequest extends FormRequest
             ],
             'phone' => 'required|string|max:20',
             // Password optional on update, but when present must be confirmed
-            'password' => 'nullable|min:6|confirmed',
+            'password' => 'nullable|string|min:8|confirmed',
             'cnic' => [
                 'required',
                 'string',

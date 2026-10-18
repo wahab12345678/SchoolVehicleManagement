@@ -15,13 +15,19 @@ class TripController extends Controller
     {
         $guardian = $this->guardianOrFail($request);
 
-        $students = $guardian->students()
-            ->with(['school', 'trips' => function ($q) {
-                $q->active()->with(['vehicle.driver', 'route'])->latest()->limit(1);
-            }])
+        $students = $guardian->students()->with('school')->get();
+
+        $activeTrips = Trip::query()
+            ->active()
+            ->whereIn('student_id', $students->pluck('id'))
+            ->with(['vehicle.driver', 'route'])
+            ->orderByDesc('id')
             ->get()
-            ->map(function (Student $student) {
-                $activeTrip = $student->trips->first();
+            ->unique('student_id')
+            ->keyBy('student_id');
+
+        $students = $students->map(function (Student $student) use ($activeTrips) {
+                $activeTrip = $activeTrips->get($student->id);
 
                 return [
                     'id' => $student->id,

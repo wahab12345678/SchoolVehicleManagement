@@ -5,18 +5,11 @@ use App\Http\Requests\LoginRequest;
 use App\Services\AuthService;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class LoginController extends Controller
 {
-    /**
-     * Create a new LoginController instance.
-     *
-     * @param AuthService $authService
-     */
-    public function __construct(AuthService $authService)
+    public function __construct(protected AuthService $authService)
     {
-        $this->authService = $authService;
     }
 
     /**
@@ -30,32 +23,30 @@ class LoginController extends Controller
     {
         $result = $this->authService->authenticate($request->validated());
         if ($result['success']) {
-            $user = Auth::user();
-            $role = $result['role'];
-            
-            // Redirect based on user role
-            switch ($role) {
+            $request->session()->regenerate();
+
+            switch ($result['role']) {
                 case 'admin':
                     return redirect()->route('admin.dashboard')->with('success', $result['message']);
                 case 'guardian':
+                case 'parent':
                     return redirect()->route('guardian.dashboard')->with('success', $result['message']);
                 case 'driver':
-                    return redirect()->route('admin.dashboard')->with('success', $result['message']); // Drivers can access admin dashboard for now
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    return redirect()->route('admin.index')->with('error', 'Driver accounts use the mobile app.');
                 default:
-                    return redirect()->route('admin.dashboard')->with('success', $result['message']);
+                    Auth::logout();
+
+                    return back()->with(['error' => 'Invalid role. Access denied.']);
             }
         }
         // Add the email to session and return errors
         return back()->with(['error' => $result['message']]); // Retains email in input
     }
 
-    /**
-     * Logs out the current user.
-     *
-     * Redirects to the login page on success.
-     *
-     * @return \Illuminate\Http\RedirectResponse
-     */
     /**
      * Show the login form.
      *
@@ -66,6 +57,11 @@ class LoginController extends Controller
         return redirect()->route('admin.index');
     }
 
+    /**
+     * Log out the current user and return to the login page.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function logout()
     {
         Auth::logout();

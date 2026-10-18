@@ -117,7 +117,7 @@
                                                     <label class="col-form-label" for="password">Password (leave blank to keep current)</label>
                                                 </div>
                                                 <div class="col-sm-9">
-                                                    <input type="password" id="password" class="form-control @error('password') is-invalid @enderror" name="password" placeholder="New Password" />
+                                                    <input type="password" id="password" class="form-control @error('password') is-invalid @enderror" name="password" placeholder="New password (min 8 characters)" minlength="8" />
                                                     @error('password')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -130,7 +130,7 @@
                                                     <label class="col-form-label" for="password_confirmation">Confirm Password</label>
                                                 </div>
                                                 <div class="col-sm-9">
-                                                    <input type="password" id="password_confirmation" class="form-control" name="password_confirmation" placeholder="Confirm New Password" />
+                                                    <input type="password" id="password_confirmation" class="form-control" name="password_confirmation" placeholder="Confirm New Password" minlength="8" />
                                                 </div>
                                             </div>
                                         </div>

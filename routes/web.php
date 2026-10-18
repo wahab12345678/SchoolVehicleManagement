@@ -17,7 +17,6 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/admin/dashboard', [\App\Http\Controllers\AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/dashboard/chart-data', [\App\Http\Controllers\Admin\DashboardController::class, 'getChartData'])->name('admin.dashboard.chart-data');
@@ -63,7 +62,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 });
 
 // Guardian Dashboard and Tracking Routes
-Route::middleware(['auth', 'role:guardian'])->group(function () {
+Route::middleware(['auth', 'role:guardian|parent'])->group(function () {
     Route::get('/guardian/dashboard', [App\Http\Controllers\GuardianDashboardController::class, 'index'])->name('guardian.dashboard');
     
     Route::prefix('guardian')->group(function () {
