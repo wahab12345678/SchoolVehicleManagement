@@ -3,15 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Guardian;
+use App\Models\Route;
+use App\Models\Student;
+use App\Models\Trip;
+use App\Models\User;
+use App\Models\Vehicle;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $user = \Illuminate\Support\Facades\Auth::user();
+        $user = Auth::user();
         if ($user && ($user->hasRole('guardian') || $user->hasRole('parent')) && !$user->hasRole('admin')) {
             return redirect()->route('guardian.dashboard');
         }
@@ -19,38 +29,38 @@ class DashboardController extends Controller
         // Get dashboard statistics with caching for better performance
         $stats = Cache::remember('dashboard_stats_optimized', 300, function () {
             return [
-                'total_students' => $this->getValidatedCount(\App\Models\Student::class),
-                'total_guardians' => $this->getValidatedCount(\App\Models\Guardian::class),
-                'total_vehicles' => $this->getValidatedCount(\App\Models\Vehicle::class),
+                'total_students' => $this->getValidatedCount(Student::class),
+                'total_guardians' => $this->getValidatedCount(Guardian::class),
+                'total_vehicles' => $this->getValidatedCount(Vehicle::class),
                 'total_drivers' => $this->getValidatedDriverCount(),
-                'total_routes' => $this->getValidatedCount(\App\Models\Route::class),
-                'total_trips' => $this->getValidatedCount(\App\Models\Trip::class),
+                'total_routes' => $this->getValidatedCount(Route::class),
+                'total_trips' => $this->getValidatedCount(Trip::class),
                 'active_trips' => $this->getValidatedActiveTripsCount(),
                 'completed_trips' => $this->getValidatedCompletedTripsCount(),
-                
+
                 // Enhanced statistics
                 'available_vehicles' => $this->getAvailableVehiclesCount(),
                 'in_use_vehicles' => $this->getInUseVehiclesCount(),
                 'maintenance_vehicles' => $this->getMaintenanceVehiclesCount(),
-                
+
                 // Performance metrics
                 'avg_trip_duration' => $this->getAverageTripDuration(),
                 'on_time_percentage' => $this->getOnTimePercentage(),
                 'popular_route' => $this->getPopularRoute(),
                 'safety_score' => $this->getSafetyScore(),
                 'incidents' => 0, // Placeholder for incident tracking
-                
-                // Trend calculations
-                'student_trend' => $this->getStudentTrend(),
-                'vehicle_trend' => $this->getVehicleTrend(),
+
+                // Trend calculations (DRY refactored & year-safe)
+                'student_trend' => $this->calculateTrend(Student::query()),
+                'vehicle_trend' => $this->calculateTrend(Vehicle::query()),
                 'driver_trend' => $this->getDriverTrend(),
-                'trip_trend' => $this->getTripTrend(),
+                'trip_trend' => $this->calculateTrend(Trip::query()),
             ];
         });
 
         // Get recent trips with optimized queries
-        $recent_trips = \Cache::remember('dashboard_recent_trips', 300, function () {
-            return \App\Models\Trip::with(['student:id,name,class', 'vehicle:id,number_plate,model', 'route:id,name'])
+        $recent_trips = Cache::remember('dashboard_recent_trips', 300, function () {
+            return Trip::with(['student:id,name,class', 'vehicle:id,number_plate,model', 'route:id,name'])
                 ->select('id', 'student_id', 'vehicle_id', 'route_id', 'status', 'created_at')
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
@@ -58,8 +68,8 @@ class DashboardController extends Controller
         });
 
         // Get active trips for real-time tracking with caching
-        $active_trips = \Cache::remember('dashboard_active_trips', 60, function () {
-            return \App\Models\Trip::with(['student:id,name,class', 'vehicle:id,number_plate,model', 'route:id,name'])
+        $active_trips = Cache::remember('dashboard_active_trips', 60, function () {
+            return Trip::with(['student:id,name,class', 'vehicle:id,number_plate,model', 'route:id,name'])
                 ->select('id', 'student_id', 'vehicle_id', 'route_id', 'status', 'created_at', 'started_at')
                 ->whereIn('status', ['pending', 'in_progress'])
                 ->orderBy('created_at', 'desc')
@@ -72,139 +82,107 @@ class DashboardController extends Controller
     public function getChartData(Request $request)
     {
         $period = $request->get('period', '30'); // Default to 30 days
-        
-        // Cache chart data for better performance
+
         $cacheKey = "chart_data_{$period}";
-        $cacheTime = in_array($period, ['7', 'this_week']) ? 60 : 300; // Shorter cache for recent data
-        
-        return \Cache::remember($cacheKey, $cacheTime, function () use ($period) {
-            // Handle different period types
+        $cacheTime = in_array($period, ['7', 'this_week']) ? 60 : 300;
+
+        $data = Cache::remember($cacheKey, $cacheTime, function () use ($period) {
+            $now = now();
+
             if ($period === 'this_week') {
-                $startDate = now()->startOfWeek();
-                $endDate = now()->endOfWeek();
+                $startDate = $now->copy()->startOfWeek();
+                $endDate = $now->copy()->endOfWeek();
                 $days = 7;
             } elseif ($period === 'this_month') {
-                $startDate = now()->startOfMonth();
-                $endDate = now()->endOfMonth();
-                $days = now()->daysInMonth;
+                $startDate = $now->copy()->startOfMonth();
+                $endDate = $now->copy()->endOfMonth();
+                $days = $now->daysInMonth;
             } elseif ($period === 'this_year') {
-                $startDate = now()->startOfYear();
-                $endDate = now()->endOfYear();
+                $startDate = $now->copy()->startOfYear();
+                $endDate = $now->copy()->endOfYear();
                 $days = 365;
             } else {
-                // Handle numeric periods (7, 30, 90 days)
-                $days = (int) $period;
-                $startDate = now()->subDays($days);
-                $endDate = now();
+                $days = max(1, (int) $period);
+                $startDate = $now->copy()->subDays($days - 1)->startOfDay();
+                $endDate = $now->copy()->endOfDay();
             }
-            
-            // Get trip trends data
-            $tripTrends = $this->getTripTrendsData($startDate, $endDate, $days, $period);
-            
-            // Get vehicle utilization data
-            $vehicleUtilization = $this->getVehicleUtilizationData();
-            
-            return response()->json([
-                'tripTrends' => $tripTrends,
-                'vehicleUtilization' => $vehicleUtilization,
-                'period' => $period
-            ]);
+
+            return [
+                'tripTrends' => $this->getTripTrendsData($startDate, $endDate, $days, $period),
+                'vehicleUtilization' => $this->getVehicleUtilizationData(),
+                'period' => $period,
+            ];
         });
+
+        return response()->json($data);
     }
 
-    private function getTripTrendsData($startDate, $endDate, $days, $period = null)
+    private function getTripTrendsData(Carbon $startDate, Carbon $endDate, int $days, ?string $period = null): array
     {
         $labels = [];
         $completedData = [];
         $activeData = [];
-        
-        if ($period === 'this_week') {
-            // Daily data for this week
-            for ($i = 0; $i < 7; $i++) {
-                $date = $startDate->copy()->addDays($i);
-                $labels[] = $date->format('D');
-                
-                $completed = \App\Models\Trip::where('status', 'completed')
-                    ->whereDate('created_at', $date)
-                    ->count();
-                $completedData[] = $completed;
-                
-                $active = \App\Models\Trip::whereIn('status', ['pending', 'in_progress'])
-                    ->whereDate('created_at', $date)
-                    ->count();
-                $activeData[] = $active;
-            }
-        } elseif ($period === 'this_month') {
-            // Daily data for this month
-            $currentDate = $startDate->copy();
-            while ($currentDate->lte($endDate)) {
-                $labels[] = $currentDate->format('M j');
-                
-                $completed = \App\Models\Trip::where('status', 'completed')
-                    ->whereDate('created_at', $currentDate)
-                    ->count();
-                $completedData[] = $completed;
-                
-                $active = \App\Models\Trip::whereIn('status', ['pending', 'in_progress'])
-                    ->whereDate('created_at', $currentDate)
-                    ->count();
-                $activeData[] = $active;
-                
-                $currentDate->addDay();
-            }
-        } elseif ($period === 'this_year') {
-            // Monthly data for this year
+
+        if ($period === 'this_year') {
+            // Single aggregated query grouped by month
+            $records = Trip::selectRaw("
+                    MONTH(created_at) as month_num,
+                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count,
+                    SUM(CASE WHEN status IN ('pending', 'in_progress') THEN 1 ELSE 0 END) as active_count
+                ")
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->groupBy('month_num')
+                ->get()
+                ->keyBy('month_num');
+
             for ($i = 1; $i <= 12; $i++) {
                 $monthStart = now()->startOfYear()->addMonths($i - 1);
-                $monthEnd = $monthStart->copy()->endOfMonth();
                 $labels[] = $monthStart->format('M');
-                
-                $completed = \App\Models\Trip::where('status', 'completed')
-                    ->whereBetween('created_at', [$monthStart, $monthEnd])
-                    ->count();
-                $completedData[] = $completed;
-                
-                $active = \App\Models\Trip::whereIn('status', ['pending', 'in_progress'])
-                    ->whereBetween('created_at', [$monthStart, $monthEnd])
-                    ->count();
-                $activeData[] = $active;
+                $completedData[] = (int) ($records[$i]->completed_count ?? 0);
+                $activeData[] = (int) ($records[$i]->active_count ?? 0);
             }
-        } elseif ($days <= 7) {
-            // Daily data for last 7 days
-            for ($i = $days - 1; $i >= 0; $i--) {
-                $date = now()->subDays($i);
-                $labels[] = $date->format('D');
-                
-                $completed = \App\Models\Trip::where('status', 'completed')
-                    ->whereDate('created_at', $date)
-                    ->count();
-                $completedData[] = $completed;
-                
-                $active = \App\Models\Trip::whereIn('status', ['pending', 'in_progress'])
-                    ->whereDate('created_at', $date)
-                    ->count();
-                $activeData[] = $active;
+        } elseif ($period === 'this_week' || $period === 'this_month' || $days <= 7) {
+            // Single aggregated query grouped by date
+            $records = Trip::selectRaw("
+                    DATE(created_at) as trip_date,
+                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count,
+                    SUM(CASE WHEN status IN ('pending', 'in_progress') THEN 1 ELSE 0 END) as active_count
+                ")
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->groupBy('trip_date')
+                ->get()
+                ->keyBy('trip_date');
+
+            $currentDate = $startDate->copy();
+            $format = ($period === 'this_month') ? 'M j' : 'D';
+
+            while ($currentDate->lte($endDate)) {
+                $dateKey = $currentDate->toDateString();
+                $labels[] = $currentDate->format($format);
+                $completedData[] = (int) ($records[$dateKey]->completed_count ?? 0);
+                $activeData[] = (int) ($records[$dateKey]->active_count ?? 0);
+                $currentDate->addDay();
             }
         } else {
-            // Weekly data for longer periods
-            $weeks = ceil($days / 7);
+            // Weekly data for longer periods (e.g., 30 or 90 days)
+            $weeks = (int) ceil($days / 7);
+            $now = now();
+
             for ($i = $weeks - 1; $i >= 0; $i--) {
-                $weekStart = now()->subWeeks($i)->startOfWeek();
-                $weekEnd = now()->subWeeks($i)->endOfWeek();
+                $weekStart = $now->copy()->subWeeks($i)->startOfWeek();
+                $weekEnd = $now->copy()->subWeeks($i)->endOfWeek();
                 $labels[] = 'Week ' . ($weeks - $i);
-                
-                $completed = \App\Models\Trip::where('status', 'completed')
+
+                $completedData[] = Trip::where('status', 'completed')
                     ->whereBetween('created_at', [$weekStart, $weekEnd])
                     ->count();
-                $completedData[] = $completed;
-                
-                $active = \App\Models\Trip::whereIn('status', ['pending', 'in_progress'])
+
+                $activeData[] = Trip::whereIn('status', ['pending', 'in_progress'])
                     ->whereBetween('created_at', [$weekStart, $weekEnd])
                     ->count();
-                $activeData[] = $active;
             }
         }
-        
+
         return [
             'labels' => $labels,
             'datasets' => [
@@ -213,198 +191,162 @@ class DashboardController extends Controller
                     'data' => $completedData,
                     'borderColor' => '#28c76f',
                     'backgroundColor' => 'rgba(40, 199, 111, 0.1)',
-                    'tension' => 0.4
+                    'tension' => 0.4,
                 ],
                 [
                     'label' => 'Active Trips',
                     'data' => $activeData,
                     'borderColor' => '#ff9f43',
                     'backgroundColor' => 'rgba(255, 159, 67, 0.1)',
-                    'tension' => 0.4
-                ]
-            ]
+                    'tension' => 0.4,
+                ],
+            ],
         ];
     }
 
-    private function getVehicleUtilizationData()
+    private function getVehicleUtilizationData(): array
     {
-        $available = \App\Models\Vehicle::where('is_available', true)->count();
-        $inUse = \App\Models\Vehicle::where('is_available', false)->count();
-        $maintenance = \App\Models\Vehicle::where('status', 'maintenance')->count();
-        
+        $available = $this->getAvailableVehiclesCount();
+        $inUse = $this->getInUseVehiclesCount();
+        $maintenance = $this->getMaintenanceVehiclesCount();
+
         return [
             'labels' => ['Available', 'In Use', 'Maintenance'],
             'data' => [$available, $inUse, $maintenance],
-            'backgroundColor' => ['#28c76f', '#ff9f43', '#ea5455']
+            'backgroundColor' => ['#28c76f', '#ff9f43', '#ea5455'],
         ];
     }
 
-    private function getAverageTripDuration()
+    private function getAverageTripDuration(): int
     {
-        // Calculate average trip duration in minutes
-        $trips = \App\Models\Trip::where('status', 'completed')
-            ->whereNotNull('started_at')
-            ->whereNotNull('ended_at')
-            ->get();
-        
-        if ($trips->count() == 0) return 25; // Default value
-        
-        $totalMinutes = $trips->sum(function($trip) {
-            return $trip->started_at->diffInMinutes($trip->ended_at);
-        });
-        
-        return round($totalMinutes / $trips->count());
+        try {
+            // Calculate average directly in SQL to avoid loading all models into memory
+            $avgMinutes = Trip::where('status', 'completed')
+                ->whereNotNull('started_at')
+                ->whereNotNull('ended_at')
+                ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, started_at, ended_at)) as avg_duration')
+                ->value('avg_duration');
+
+            return $avgMinutes !== null ? (int) round($avgMinutes) : 25;
+        } catch (\Exception $e) {
+            Log::error('Error calculating average trip duration: ' . $e->getMessage());
+            return 25;
+        }
     }
 
-    private function getOnTimePercentage()
+    private function getOnTimePercentage(): int
     {
-        // Calculate on-time percentage (placeholder logic)
-        $totalTrips = \App\Models\Trip::where('status', 'completed')->count();
-        if ($totalTrips == 0) return 95; // Default value
-        
-        // For now, return a high percentage as placeholder
+        $totalTrips = $this->getValidatedCompletedTripsCount();
+        if ($totalTrips === 0) {
+            return 95;
+        }
+
         return 95;
     }
 
-    private function getPopularRoute()
+    private function getPopularRoute(): string
     {
-        $popularRoute = \App\Models\Route::withCount('trips')
-            ->orderBy('trips_count', 'desc')
-            ->first();
-        
-        return $popularRoute ? $popularRoute->name : 'Route A';
+        try {
+            $popularRoute = Route::withCount('trips')
+                ->orderBy('trips_count', 'desc')
+                ->first();
+
+            return $popularRoute ? $popularRoute->name : 'Route A';
+        } catch (\Exception $e) {
+            Log::error('Error fetching popular route: ' . $e->getMessage());
+            return 'Route A';
+        }
     }
 
-    private function getSafetyScore()
+    private function getSafetyScore(): int
     {
-        // Calculate safety score based on various factors
-        // For now, return a high score as placeholder
         return 98;
     }
 
-    private function getAvailableVehiclesCount()
+    private function getAvailableVehiclesCount(): int
     {
         try {
-            // First try to use the is_available column
-            return \App\Models\Vehicle::where('is_available', true)->count();
+            return Vehicle::where('is_available', true)->count();
         } catch (\Exception $e) {
-            // Fallback to calculating availability based on active trips
-            return \App\Models\Vehicle::whereDoesntHave('trips', function($query) {
+            return Vehicle::whereDoesntHave('trips', function ($query) {
                 $query->whereIn('status', ['pending', 'in_progress']);
             })->count();
         }
     }
 
-    private function getInUseVehiclesCount()
+    private function getInUseVehiclesCount(): int
     {
         try {
-            // First try to use the is_available column
-            return \App\Models\Vehicle::where('is_available', false)->count();
+            return Vehicle::where('is_available', false)->count();
         } catch (\Exception $e) {
-            // Fallback to calculating based on active trips
-            return \App\Models\Vehicle::whereHas('trips', function($query) {
+            return Vehicle::whereHas('trips', function ($query) {
                 $query->whereIn('status', ['pending', 'in_progress']);
             })->count();
         }
     }
 
-    private function getMaintenanceVehiclesCount()
+    private function getMaintenanceVehiclesCount(): int
     {
         try {
-            // Count vehicles with maintenance status
-            return \App\Models\Vehicle::where('status', 'maintenance')->count();
+            return Vehicle::where('status', 'maintenance')->count();
         } catch (\Exception $e) {
-            // Fallback to 0 if status column doesn't exist
             return 0;
         }
     }
 
-    private function getStudentTrend()
+    /**
+     * Reusable helper to calculate month-over-month trend accurately across year boundaries
+     */
+    private function calculateTrend(Builder $query): array
     {
-        $currentMonth = \App\Models\Student::whereMonth('created_at', now()->month)->count();
-        $lastMonth = \App\Models\Student::whereMonth('created_at', now()->subMonth()->month)->count();
-        
-        if ($lastMonth == 0) {
-            // If no data from last month, check if we have any students at all
-            $totalStudents = \App\Models\Student::count();
-            if ($totalStudents > 0) {
-                return ['percentage' => 100, 'direction' => 'up'];
+        try {
+            $now = now();
+            $currentStart = $now->copy()->startOfMonth();
+            $currentEnd = $now->copy()->endOfMonth();
+
+            $lastMonthStart = $now->copy()->subMonthNoOverflow()->startOfMonth();
+            $lastMonthEnd = $now->copy()->subMonthNoOverflow()->endOfMonth();
+
+            $currentMonth = (clone $query)->whereBetween('created_at', [$currentStart, $currentEnd])->count();
+            $lastMonth = (clone $query)->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count();
+
+            if ($lastMonth === 0) {
+                $total = (clone $query)->count();
+                if ($total > 0) {
+                    return ['percentage' => 100, 'direction' => 'up'];
+                }
+                return ['percentage' => 0, 'direction' => 'neutral'];
             }
+
+            $percentage = round((($currentMonth - $lastMonth) / $lastMonth) * 100);
+            $direction = $percentage > 0 ? 'up' : ($percentage < 0 ? 'down' : 'neutral');
+
+            return ['percentage' => abs($percentage), 'direction' => $direction];
+        } catch (\Exception $e) {
+            Log::error('Error calculating trend: ' . $e->getMessage());
             return ['percentage' => 0, 'direction' => 'neutral'];
         }
-        
-        $percentage = round((($currentMonth - $lastMonth) / $lastMonth) * 100);
-        $direction = $percentage > 0 ? 'up' : ($percentage < 0 ? 'down' : 'neutral');
-        
-        return ['percentage' => abs($percentage), 'direction' => $direction];
     }
 
-    private function getVehicleTrend()
+    private function getDriverTrend(): array
     {
-        $currentMonth = \App\Models\Vehicle::whereMonth('created_at', now()->month)->count();
-        $lastMonth = \App\Models\Vehicle::whereMonth('created_at', now()->subMonth()->month)->count();
-        
-        if ($lastMonth == 0) {
-            $totalVehicles = \App\Models\Vehicle::count();
-            if ($totalVehicles > 0) {
-                return ['percentage' => 100, 'direction' => 'up'];
-            }
+        try {
+            return $this->calculateTrend(User::role('driver'));
+        } catch (\Exception $e) {
+            Log::error('Error calculating driver trend: ' . $e->getMessage());
             return ['percentage' => 0, 'direction' => 'neutral'];
         }
-        
-        $percentage = round((($currentMonth - $lastMonth) / $lastMonth) * 100);
-        $direction = $percentage > 0 ? 'up' : ($percentage < 0 ? 'down' : 'neutral');
-        
-        return ['percentage' => abs($percentage), 'direction' => $direction];
-    }
-
-    private function getDriverTrend()
-    {
-        $currentMonth = \App\Models\User::role('driver')->whereMonth('created_at', now()->month)->count();
-        $lastMonth = \App\Models\User::role('driver')->whereMonth('created_at', now()->subMonth()->month)->count();
-        
-        if ($lastMonth == 0) {
-            $totalDrivers = \App\Models\User::role('driver')->count();
-            if ($totalDrivers > 0) {
-                return ['percentage' => 100, 'direction' => 'up'];
-            }
-            return ['percentage' => 0, 'direction' => 'neutral'];
-        }
-        
-        $percentage = round((($currentMonth - $lastMonth) / $lastMonth) * 100);
-        $direction = $percentage > 0 ? 'up' : ($percentage < 0 ? 'down' : 'neutral');
-        
-        return ['percentage' => abs($percentage), 'direction' => $direction];
-    }
-
-    private function getTripTrend()
-    {
-        $currentMonth = \App\Models\Trip::whereMonth('created_at', now()->month)->count();
-        $lastMonth = \App\Models\Trip::whereMonth('created_at', now()->subMonth()->month)->count();
-        
-        if ($lastMonth == 0) {
-            $totalTrips = \App\Models\Trip::count();
-            if ($totalTrips > 0) {
-                return ['percentage' => 100, 'direction' => 'up'];
-            }
-            return ['percentage' => 0, 'direction' => 'neutral'];
-        }
-        
-        $percentage = round((($currentMonth - $lastMonth) / $lastMonth) * 100);
-        $direction = $percentage > 0 ? 'up' : ($percentage < 0 ? 'down' : 'neutral');
-        
-        return ['percentage' => abs($percentage), 'direction' => $direction];
     }
 
     /**
      * Get validated count for any model with error handling
      */
-    private function getValidatedCount($modelClass)
+    private function getValidatedCount(string $modelClass): int
     {
         try {
             return $modelClass::count();
         } catch (\Exception $e) {
-            \Log::error("Error counting {$modelClass}: " . $e->getMessage());
+            Log::error("Error counting {$modelClass}: " . $e->getMessage());
             return 0;
         }
     }
@@ -412,12 +354,12 @@ class DashboardController extends Controller
     /**
      * Get validated driver count with role check
      */
-    private function getValidatedDriverCount()
+    private function getValidatedDriverCount(): int
     {
         try {
-            return \App\Models\User::role('driver')->count();
+            return User::role('driver')->count();
         } catch (\Exception $e) {
-            \Log::error("Error counting drivers: " . $e->getMessage());
+            Log::error('Error counting drivers: ' . $e->getMessage());
             return 0;
         }
     }
@@ -425,12 +367,12 @@ class DashboardController extends Controller
     /**
      * Get validated active trips count
      */
-    private function getValidatedActiveTripsCount()
+    private function getValidatedActiveTripsCount(): int
     {
         try {
-            return \App\Models\Trip::whereIn('status', ['pending', 'in_progress'])->count();
+            return Trip::whereIn('status', ['pending', 'in_progress'])->count();
         } catch (\Exception $e) {
-            \Log::error("Error counting active trips: " . $e->getMessage());
+            Log::error('Error counting active trips: ' . $e->getMessage());
             return 0;
         }
     }
@@ -438,12 +380,12 @@ class DashboardController extends Controller
     /**
      * Get validated completed trips count
      */
-    private function getValidatedCompletedTripsCount()
+    private function getValidatedCompletedTripsCount(): int
     {
         try {
-            return \App\Models\Trip::where('status', 'completed')->count();
+            return Trip::where('status', 'completed')->count();
         } catch (\Exception $e) {
-            \Log::error("Error counting completed trips: " . $e->getMessage());
+            Log::error('Error counting completed trips: ' . $e->getMessage());
             return 0;
         }
     }
@@ -451,24 +393,24 @@ class DashboardController extends Controller
     /**
      * Validate trip status consistency
      */
-    private function validateTripStatusConsistency()
+    private function validateTripStatusConsistency(): bool
     {
         try {
-            $totalTrips = \App\Models\Trip::count();
-            $activeTrips = \App\Models\Trip::whereIn('status', ['pending', 'in_progress'])->count();
-            $completedTrips = \App\Models\Trip::where('status', 'completed')->count();
-            $cancelledTrips = \App\Models\Trip::where('status', 'cancelled')->count();
-            
+            $totalTrips = Trip::count();
+            $activeTrips = Trip::whereIn('status', ['pending', 'in_progress'])->count();
+            $completedTrips = Trip::where('status', 'completed')->count();
+            $cancelledTrips = Trip::where('status', 'cancelled')->count();
+
             $statusTotal = $activeTrips + $completedTrips + $cancelledTrips;
-            
+
             if ($statusTotal !== $totalTrips) {
-                \Log::warning("Trip status inconsistency detected: Total={$totalTrips}, StatusTotal={$statusTotal}");
+                Log::warning("Trip status inconsistency detected: Total={$totalTrips}, StatusTotal={$statusTotal}");
                 return false;
             }
-            
+
             return true;
         } catch (\Exception $e) {
-            \Log::error("Error validating trip status consistency: " . $e->getMessage());
+            Log::error('Error validating trip status consistency: ' . $e->getMessage());
             return false;
         }
     }
@@ -476,23 +418,23 @@ class DashboardController extends Controller
     /**
      * Validate vehicle availability consistency
      */
-    private function validateVehicleAvailabilityConsistency()
+    private function validateVehicleAvailabilityConsistency(): bool
     {
         try {
-            $totalVehicles = \App\Models\Vehicle::count();
-            $availableVehicles = \App\Models\Vehicle::where('is_available', true)->count();
-            $inUseVehicles = \App\Models\Vehicle::where('is_available', false)->count();
-            
+            $totalVehicles = Vehicle::count();
+            $availableVehicles = Vehicle::where('is_available', true)->count();
+            $inUseVehicles = Vehicle::where('is_available', false)->count();
+
             $availabilityTotal = $availableVehicles + $inUseVehicles;
-            
+
             if ($availabilityTotal !== $totalVehicles) {
-                \Log::warning("Vehicle availability inconsistency detected: Total={$totalVehicles}, AvailabilityTotal={$availabilityTotal}");
+                Log::warning("Vehicle availability inconsistency detected: Total={$totalVehicles}, AvailabilityTotal={$availabilityTotal}");
                 return false;
             }
-            
+
             return true;
         } catch (\Exception $e) {
-            \Log::error("Error validating vehicle availability consistency: " . $e->getMessage());
+            Log::error('Error validating vehicle availability consistency: ' . $e->getMessage());
             return false;
         }
     }

@@ -20,17 +20,46 @@ class Vehicle extends Model
 
     public function getCapacityAttribute($value)
     {
+        $type = strtolower($this->type ?? '');
+
+        // Cars are strictly capped at maximum 5 passengers
+        if ($type === 'car') {
+            $configured = !empty($value) ? (int) $value : 5;
+            return min($configured, 5);
+        }
+
         if (!empty($value)) {
             return (int) $value;
         }
 
-        return match (strtolower($this->type ?? '')) {
+        return match ($type) {
             'rickshaw' => 4,
-            'car' => 4,
             'van' => 14,
             'bus' => 30,
             default => 10,
         };
+    }
+
+    public function getEffectiveCapacityAttribute(): int
+    {
+        return $this->capacity;
+    }
+
+    public function getAssignedStudentsCountAttribute(): int
+    {
+        return $this->driver_id
+            ? Student::where('driver_id', $this->driver_id)->count()
+            : 0;
+    }
+
+    public function getAvailableSeatsAttribute(): int
+    {
+        return max(0, $this->capacity - $this->assigned_students_count);
+    }
+
+    public function getIsFullAttribute(): bool
+    {
+        return $this->assigned_students_count >= $this->capacity;
     }
 
     public function driver()

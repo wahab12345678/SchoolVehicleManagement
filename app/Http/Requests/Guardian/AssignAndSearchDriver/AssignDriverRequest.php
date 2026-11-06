@@ -57,6 +57,28 @@ class AssignDriverRequest extends FormRequest
         ];
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $driverId = $this->input('driver_id');
+            if ($driverId) {
+                $driver = User::role('driver')->with('vehicles')->find($driverId);
+                $vehicle = $driver?->vehicles->first();
+                if ($vehicle) {
+                    $currentOccupancy = Student::where('driver_id', $driverId)->count();
+                    $maxCapacity = $vehicle->capacity; // Car max 5, etc.
+                    if ($currentOccupancy >= $maxCapacity) {
+                        $typeLabel = ucfirst($vehicle->type ?? 'Vehicle');
+                        $validator->errors()->add(
+                            'driver_id',
+                            "Vehicle capacity limit reached! This {$typeLabel} cannot exceed {$maxCapacity} passengers ({$currentOccupancy}/{$maxCapacity} occupied)."
+                        );
+                    }
+                }
+            }
+        });
+    }
+
     /**
      * Custom validation messages.
      */
