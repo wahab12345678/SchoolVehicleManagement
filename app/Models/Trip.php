@@ -123,9 +123,6 @@ class Trip extends Model
 
     public function getIsActiveAttribute()
     {
-<<<<<<< HEAD
-        return in_array($this->status, ['pending', 'en_route', 'arrived', 'in_progress']);
-=======
         return in_array($this->status, self::ACTIVE_STATUSES, true);
     }
 
@@ -136,7 +133,6 @@ class Trip extends Model
         }
 
         return (self::STATUS_FLOW[$this->status] ?? null) === $status;
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
     }
 
     public function getCurrentLocationAttribute()
@@ -146,11 +142,7 @@ class Trip extends Model
 
     public function scopeActive($query)
     {
-<<<<<<< HEAD
-        return $query->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress']);
-=======
         return $query->whereIn('status', self::ACTIVE_STATUSES);
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
     }
 
     public function scopeCompleted($query)

@@ -10,16 +10,11 @@ class TripResource extends JsonResource
     public function toArray(Request $request): array
     {
         $latest = $this->relationLoaded('locations')
-<<<<<<< HEAD
-            ? $this->locations->sortByDesc('recorded_at')->first()
-            : $this->locations()->latest('recorded_at')->first();
-=======
             ? $this->locations->sortBy([
                 ['recorded_at', 'desc'],
                 ['id', 'desc'],
             ])->first()
             : $this->locations()->reorder()->latest('recorded_at')->latest('id')->first();
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
 
         return [
             'id' => $this->id,

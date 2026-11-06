@@ -22,7 +22,7 @@ class GuardianTrackingController extends Controller
         if (!$guardian) {
             if ($user->hasRole('admin')) {
                 $students = Student::with(['trips' => function($query) {
-                    $query->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress'])->with(['vehicle.driver', 'route', 'locations' => function($q) {
+                    $query->active()->with(['vehicle.driver', 'route', 'locations' => function($q) {
                         $q->latest('recorded_at')->limit(1);
                     }]);
                 }])->get();
@@ -37,15 +37,10 @@ class GuardianTrackingController extends Controller
             }
         }
 
-<<<<<<< HEAD
         $students = $guardian->students()->with(['trips' => function($query) {
-            $query->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress'])->with(['vehicle.driver', 'route', 'locations' => function($q) {
+            $query->active()->with(['vehicle.driver', 'route', 'locations' => function($q) {
                 $q->latest('recorded_at')->limit(1);
             }]);
-=======
-        $students = $guardian->students()->with(['trips' => function ($query) {
-            $query->active()->with(['vehicle.driver', 'route'])->latest();
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
         }])->get();
 
         return view('guardian.tracking.index', compact('students'));

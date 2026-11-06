@@ -16,13 +16,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/photo', [\App\Http\Controllers\ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
     Route::delete('/profile/photo', [\App\Http\Controllers\ProfileController::class, 'destroyPhoto'])->name('profile.photo.destroy');
 });
+
 Route::middleware('guest')->group(function () {
     Route::get('/admin', [\App\Http\Controllers\AdminController::class, 'index'])->name('admin.index'); // Render login page here
     Route::get('/login', [\App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login'); // Login form
     Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login.post'); // Post login request
 });
 
-<<<<<<< HEAD
 // Generic authenticated dashboard redirect
 Route::middleware('auth')->get('/dashboard', function () {
     $user = \Illuminate\Support\Facades\Auth::user();
@@ -61,50 +61,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
         Route::post('/change-status', [\App\Http\Controllers\Admin\CategoryController::class, 'toggleStatus'])->name('categories.change-status');
         Route::post('/change-visibility', [\App\Http\Controllers\Admin\CategoryController::class, 'toggleVisibilityStatus'])->name('categories.change-visibility');
         Route::get('/edit/{id}', [\App\Http\Controllers\Admin\CategoryController::class,  'edit'])->name('categories.edit');
-=======
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::prefix('admin')->group(function () {
-        Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
-        Route::get('/dashboard/chart-data', [\App\Http\Controllers\Admin\DashboardController::class, 'getChartData'])->name('admin.dashboard.chart-data');
-        Route::prefix('category')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('admin.category');
-            Route::get('/list', [\App\Http\Controllers\Admin\CategoryController::class, 'list'])->name('admin.category.list');
-            Route::post('/create', [\App\Http\Controllers\Admin\CategoryController::class, 'create'])->name('admin.category.create');
-            Route::post('/update',  [\App\Http\Controllers\Admin\CategoryController::class, 'update'])->name('categories.update');
-            Route::delete('/categories/{id}', [\App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
-            Route::post('/change-status', [\App\Http\Controllers\Admin\CategoryController::class, 'toggleStatus'])->name('categories.change-status');
-            Route::post('/change-visibility', [\App\Http\Controllers\Admin\CategoryController::class, 'toggleVisibilityStatus'])->name('categories.change-visibility');
-            Route::get('/edit/{id}', [\App\Http\Controllers\Admin\CategoryController::class,  'edit'])->name('categories.edit');
-        });
-        Route::resource('guardians', App\Http\Controllers\Admin\GuardianController::class)->names('admin.guardians');
-        Route::resource('students', App\Http\Controllers\Admin\StudentController::class)->names('admin.students');
-        Route::post('students/bulk-delete', [App\Http\Controllers\Admin\StudentController::class, 'bulkDelete'])->name('admin.students.bulk-delete');
-        Route::post('students/export', [App\Http\Controllers\Admin\StudentController::class, 'export'])->name('admin.students.export');
-        
-        // Trip Management
-        Route::resource('trips', App\Http\Controllers\Admin\TripController::class)->names('admin.trips');
-        Route::post('trips/{trip}/start', [App\Http\Controllers\Admin\TripController::class, 'start'])->name('admin.trips.start');
-        Route::post('trips/{trip}/complete', [App\Http\Controllers\Admin\TripController::class, 'complete'])->name('admin.trips.complete');
-        Route::post('trips/{trip}/location', [App\Http\Controllers\Admin\TripController::class, 'addLocation'])->name('admin.trips.location');
-        Route::get('trips/{trip}/track', [App\Http\Controllers\Admin\TripController::class, 'track'])->name('admin.trips.track');
-        Route::get('trips/{trip}/locations', [App\Http\Controllers\Admin\TripController::class, 'getLocations'])->name('admin.trips.locations');
-        
-        // Vehicle Management
-        Route::resource('vehicles', App\Http\Controllers\Admin\VehicleController::class)->names('admin.vehicles');
-        
-        // Route Management
-        Route::resource('routes', App\Http\Controllers\Admin\RouteController::class)->names('admin.routes');
-        
-        // Driver Management
-        Route::resource('drivers', App\Http\Controllers\Admin\DriverController::class)->names('admin.drivers');
-        
-        // School Management
-        Route::resource('school', App\Http\Controllers\Admin\SchoolController::class)->names('admin.school');
-
-        // Place search for map picker (OpenStreetMap Nominatim proxy)
-        Route::get('/geocode/search', [App\Http\Controllers\Admin\GeocodeController::class, 'search'])
-            ->name('admin.geocode.search');
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
     });
     Route::resource('guardians', App\Http\Controllers\Admin\GuardianController::class)->names('admin.guardians');
     Route::resource('students', App\Http\Controllers\Admin\StudentController::class)->names('admin.students');
@@ -122,14 +78,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     
     // School Management
     Route::resource('school', App\Http\Controllers\Admin\SchoolController::class)->names('admin.school');
+
+    // Place search for map picker (OpenStreetMap Nominatim proxy)
+    Route::get('/geocode/search', [App\Http\Controllers\Admin\GeocodeController::class, 'search'])
+        ->name('admin.geocode.search');
 });
 
 // Guardian Dashboard and Tracking Routes
-<<<<<<< HEAD
 Route::middleware(['auth', 'role:guardian|parent|admin'])->group(function () {
-=======
-Route::middleware(['auth', 'role:guardian|parent'])->group(function () {
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
     Route::get('/guardian/dashboard', [App\Http\Controllers\GuardianDashboardController::class, 'index'])->name('guardian.dashboard');
     
     Route::prefix('guardian')->group(function () {

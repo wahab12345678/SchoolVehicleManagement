@@ -122,63 +122,21 @@ class DashboardController extends Controller
         $labels = [];
         $completedData = [];
         $activeData = [];
-<<<<<<< HEAD
-
         if ($period === 'this_year') {
             // Single aggregated query grouped by month
             $records = Trip::selectRaw("
                     MONTH(created_at) as month_num,
                     SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count,
-                    SUM(CASE WHEN status IN ('pending', 'in_progress') THEN 1 ELSE 0 END) as active_count
+                    SUM(CASE WHEN status IN ('pending', 'en_route', 'arrived', 'in_progress') THEN 1 ELSE 0 END) as active_count
                 ")
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->groupBy('month_num')
                 ->get()
                 ->keyBy('month_num');
 
-=======
-        
-        if ($period === 'this_week') {
-            // Daily data for this week
-            for ($i = 0; $i < 7; $i++) {
-                $date = $startDate->copy()->addDays($i);
-                $labels[] = $date->format('D');
-                
-                $completed = \App\Models\Trip::where('status', 'completed')
-                    ->whereDate('created_at', $date)
-                    ->count();
-                $completedData[] = $completed;
-                
-                $active = \App\Models\Trip::whereIn('status', \App\Models\Trip::ACTIVE_STATUSES)
-                    ->whereDate('created_at', $date)
-                    ->count();
-                $activeData[] = $active;
-            }
-        } elseif ($period === 'this_month') {
-            // Daily data for this month
-            $currentDate = $startDate->copy();
-            while ($currentDate->lte($endDate)) {
-                $labels[] = $currentDate->format('M j');
-                
-                $completed = \App\Models\Trip::where('status', 'completed')
-                    ->whereDate('created_at', $currentDate)
-                    ->count();
-                $completedData[] = $completed;
-                
-                $active = \App\Models\Trip::whereIn('status', \App\Models\Trip::ACTIVE_STATUSES)
-                    ->whereDate('created_at', $currentDate)
-                    ->count();
-                $activeData[] = $active;
-                
-                $currentDate->addDay();
-            }
-        } elseif ($period === 'this_year') {
-            // Monthly data for this year
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
             for ($i = 1; $i <= 12; $i++) {
                 $monthStart = now()->startOfYear()->addMonths($i - 1);
                 $labels[] = $monthStart->format('M');
-<<<<<<< HEAD
                 $completedData[] = (int) ($records[$i]->completed_count ?? 0);
                 $activeData[] = (int) ($records[$i]->active_count ?? 0);
             }
@@ -187,7 +145,7 @@ class DashboardController extends Controller
             $records = Trip::selectRaw("
                     DATE(created_at) as trip_date,
                     SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count,
-                    SUM(CASE WHEN status IN ('pending', 'in_progress') THEN 1 ELSE 0 END) as active_count
+                    SUM(CASE WHEN status IN ('pending', 'en_route', 'arrived', 'in_progress') THEN 1 ELSE 0 END) as active_count
                 ")
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->groupBy('trip_date')
@@ -203,34 +161,6 @@ class DashboardController extends Controller
                 $completedData[] = (int) ($records[$dateKey]->completed_count ?? 0);
                 $activeData[] = (int) ($records[$dateKey]->active_count ?? 0);
                 $currentDate->addDay();
-=======
-                
-                $completed = \App\Models\Trip::where('status', 'completed')
-                    ->whereBetween('created_at', [$monthStart, $monthEnd])
-                    ->count();
-                $completedData[] = $completed;
-                
-                $active = \App\Models\Trip::whereIn('status', \App\Models\Trip::ACTIVE_STATUSES)
-                    ->whereBetween('created_at', [$monthStart, $monthEnd])
-                    ->count();
-                $activeData[] = $active;
-            }
-        } elseif ($days <= 7) {
-            // Daily data for last 7 days
-            for ($i = $days - 1; $i >= 0; $i--) {
-                $date = now()->subDays($i);
-                $labels[] = $date->format('D');
-                
-                $completed = \App\Models\Trip::where('status', 'completed')
-                    ->whereDate('created_at', $date)
-                    ->count();
-                $completedData[] = $completed;
-                
-                $active = \App\Models\Trip::whereIn('status', \App\Models\Trip::ACTIVE_STATUSES)
-                    ->whereDate('created_at', $date)
-                    ->count();
-                $activeData[] = $active;
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
             }
         } else {
             // Weekly data for longer periods (e.g., 30 or 90 days)
@@ -245,14 +175,8 @@ class DashboardController extends Controller
                 $completedData[] = Trip::where('status', 'completed')
                     ->whereBetween('created_at', [$weekStart, $weekEnd])
                     ->count();
-<<<<<<< HEAD
 
-                $activeData[] = Trip::whereIn('status', ['pending', 'in_progress'])
-=======
-                $completedData[] = $completed;
-                
-                $active = \App\Models\Trip::whereIn('status', \App\Models\Trip::ACTIVE_STATUSES)
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
+                $activeData[] = Trip::whereIn('status', Trip::ACTIVE_STATUSES)
                     ->whereBetween('created_at', [$weekStart, $weekEnd])
                     ->count();
             }
@@ -343,14 +267,9 @@ class DashboardController extends Controller
         try {
             return Vehicle::where('is_available', true)->count();
         } catch (\Exception $e) {
-<<<<<<< HEAD
-            return Vehicle::whereDoesntHave('trips', function ($query) {
-                $query->whereIn('status', ['pending', 'in_progress']);
-=======
             // Fallback to calculating availability based on active trips
-            return \App\Models\Vehicle::whereDoesntHave('trips', function($query) {
-                $query->whereIn('status', \App\Models\Trip::ACTIVE_STATUSES);
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
+            return Vehicle::whereDoesntHave('trips', function ($query) {
+                $query->whereIn('status', Trip::ACTIVE_STATUSES);
             })->count();
         }
     }
@@ -360,14 +279,9 @@ class DashboardController extends Controller
         try {
             return Vehicle::where('is_available', false)->count();
         } catch (\Exception $e) {
-<<<<<<< HEAD
-            return Vehicle::whereHas('trips', function ($query) {
-                $query->whereIn('status', ['pending', 'in_progress']);
-=======
             // Fallback to calculating based on active trips
-            return \App\Models\Vehicle::whereHas('trips', function($query) {
-                $query->whereIn('status', \App\Models\Trip::ACTIVE_STATUSES);
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
+            return Vehicle::whereHas('trips', function ($query) {
+                $query->whereIn('status', Trip::ACTIVE_STATUSES);
             })->count();
         }
     }
@@ -457,11 +371,7 @@ class DashboardController extends Controller
     private function getValidatedActiveTripsCount(): int
     {
         try {
-<<<<<<< HEAD
-            return Trip::whereIn('status', ['pending', 'in_progress'])->count();
-=======
-            return \App\Models\Trip::whereIn('status', \App\Models\Trip::ACTIVE_STATUSES)->count();
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
+            return Trip::whereIn('status', Trip::ACTIVE_STATUSES)->count();
         } catch (\Exception $e) {
             Log::error('Error counting active trips: ' . $e->getMessage());
             return 0;
@@ -487,19 +397,10 @@ class DashboardController extends Controller
     private function validateTripStatusConsistency(): bool
     {
         try {
-<<<<<<< HEAD
             $totalTrips = Trip::count();
-            $activeTrips = Trip::whereIn('status', ['pending', 'in_progress'])->count();
+            $activeTrips = Trip::whereIn('status', Trip::ACTIVE_STATUSES)->count();
             $completedTrips = Trip::where('status', 'completed')->count();
             $cancelledTrips = Trip::where('status', 'cancelled')->count();
-
-=======
-            $totalTrips = \App\Models\Trip::count();
-            $activeTrips = \App\Models\Trip::whereIn('status', \App\Models\Trip::ACTIVE_STATUSES)->count();
-            $completedTrips = \App\Models\Trip::where('status', 'completed')->count();
-            $cancelledTrips = \App\Models\Trip::where('status', 'cancelled')->count();
-            
->>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
             $statusTotal = $activeTrips + $completedTrips + $cancelledTrips;
 
             if ($statusTotal !== $totalTrips) {
