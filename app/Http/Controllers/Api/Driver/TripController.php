@@ -68,7 +68,11 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
+<<<<<<< HEAD
         if (!in_array($trip->status, ['en_route', 'pending'], true)) {
+=======
+        if ($trip->status !== 'en_route') {
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
             return $this->invalidTransition($trip, 'en_route');
         }
 
@@ -90,7 +94,11 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
+<<<<<<< HEAD
         if (!in_array($trip->status, ['arrived', 'en_route'], true)) {
+=======
+        if ($trip->status !== 'arrived') {
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
             return $this->invalidTransition($trip, 'arrived');
         }
 
@@ -114,7 +122,11 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
+<<<<<<< HEAD
         if (!in_array($trip->status, ['in_progress', 'arrived', 'en_route'], true)) {
+=======
+        if ($trip->status !== 'in_progress') {
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
             return $this->invalidTransition($trip, 'in_progress');
         }
 
@@ -143,14 +155,41 @@ class TripController extends Controller
             ], 422);
         }
 
+<<<<<<< HEAD
         $data = $request->validate([
+=======
+        $input = $request->all();
+        // Mobile GPS often sends heading=-1 when unavailable.
+        if (isset($input['heading']) && (!is_numeric($input['heading']) || $input['heading'] < 0 || $input['heading'] > 360)) {
+            unset($input['heading']);
+        }
+        if (isset($input['speed']) && (!is_numeric($input['speed']) || $input['speed'] < 0)) {
+            unset($input['speed']);
+        }
+        if (isset($input['accuracy']) && (!is_numeric($input['accuracy']) || $input['accuracy'] < 0)) {
+            unset($input['accuracy']);
+        }
+
+        $data = validator($input, [
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'nullable|numeric|min:0',
             'heading' => 'nullable|numeric|between:0,360',
             'speed' => 'nullable|numeric|min:0',
             'recorded_at' => 'nullable|date',
+<<<<<<< HEAD
         ]);
+=======
+        ])->validate();
+
+        $recordedAt = now();
+        if (!empty($data['recorded_at'])) {
+            $candidate = \Carbon\Carbon::parse($data['recorded_at']);
+            $withinWindow = $candidate->between(now()->subDay(), now()->addMinutes(2));
+            $recordedAt = $withinWindow ? $candidate : now();
+        }
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
 
         $location = TripLocation::create([
             'trip_id' => $trip->id,
@@ -159,7 +198,11 @@ class TripController extends Controller
             'accuracy' => $data['accuracy'] ?? null,
             'heading' => $data['heading'] ?? null,
             'speed' => $data['speed'] ?? null,
+<<<<<<< HEAD
             'recorded_at' => $data['recorded_at'] ?? now(),
+=======
+            'recorded_at' => $recordedAt,
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
         ]);
 
         return response()->json([

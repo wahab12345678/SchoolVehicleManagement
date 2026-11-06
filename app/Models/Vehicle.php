@@ -79,7 +79,11 @@ class Vehicle extends Model
 
     public function activeTrips()
     {
+<<<<<<< HEAD
         return $this->hasMany(Trip::class)->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress']);
+=======
+        return $this->hasMany(Trip::class)->whereIn('status', Trip::ACTIVE_STATUSES);
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
     }
 
     public function getIsAvailableAttribute()

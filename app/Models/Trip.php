@@ -7,6 +7,15 @@ use Carbon\Carbon;
 
 class Trip extends Model
 {
+    public const ACTIVE_STATUSES = ['pending', 'en_route', 'arrived', 'in_progress'];
+
+    public const STATUS_FLOW = [
+        'pending' => 'en_route',
+        'en_route' => 'arrived',
+        'arrived' => 'in_progress',
+        'in_progress' => 'completed',
+    ];
+
     protected $fillable = [
         'vehicle_id',
         'route_id',
@@ -99,7 +108,9 @@ class Trip extends Model
 
     public function locations()
     {
-        return $this->hasMany(TripLocation::class)->orderBy('recorded_at');
+        // Do NOT default-order ASC here — it breaks latest('recorded_at')->first()
+        // (MySQL keeps the first ORDER BY on the same column → returns oldest row).
+        return $this->hasMany(TripLocation::class);
     }
 
     public function getDurationAttribute()
@@ -112,17 +123,34 @@ class Trip extends Model
 
     public function getIsActiveAttribute()
     {
+<<<<<<< HEAD
         return in_array($this->status, ['pending', 'en_route', 'arrived', 'in_progress']);
+=======
+        return in_array($this->status, self::ACTIVE_STATUSES, true);
+    }
+
+    public function canTransitionTo(string $status): bool
+    {
+        if ($this->status === $status) {
+            return true;
+        }
+
+        return (self::STATUS_FLOW[$this->status] ?? null) === $status;
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
     }
 
     public function getCurrentLocationAttribute()
     {
-        return $this->locations()->latest('recorded_at')->first();
+        return $this->locations()->reorder()->latest('recorded_at')->latest('id')->first();
     }
 
     public function scopeActive($query)
     {
+<<<<<<< HEAD
         return $query->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress']);
+=======
+        return $query->whereIn('status', self::ACTIVE_STATUSES);
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
     }
 
     public function scopeCompleted($query)

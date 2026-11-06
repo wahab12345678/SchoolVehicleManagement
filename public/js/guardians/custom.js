@@ -131,7 +131,7 @@ $(document).ready(function() {
         }
 
         // password required on create
-        if (!password || password.length < 6) {
+        if (!password || password.length < 8) {
             $form.find('#password').addClass('is-invalid');
             return;
         }

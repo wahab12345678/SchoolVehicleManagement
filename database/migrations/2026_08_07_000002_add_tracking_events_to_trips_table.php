@@ -9,9 +9,14 @@ return new class extends Migration
 {
     public function up(): void
     {
+<<<<<<< HEAD
         if (DB::getDriverName() === 'mysql') {
             DB::statement("ALTER TABLE trips MODIFY COLUMN status ENUM('pending', 'en_route', 'arrived', 'in_progress', 'completed') NOT NULL DEFAULT 'pending'");
         }
+=======
+        // Widen status for Careem-style pickup flow
+        DB::statement("ALTER TABLE trips MODIFY COLUMN status ENUM('pending', 'en_route', 'arrived', 'in_progress', 'completed') NOT NULL DEFAULT 'pending'");
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
 
         Schema::table('trips', function (Blueprint $table) {
             $table->enum('direction', ['to_school', 'from_school'])->default('to_school')->after('status');
@@ -40,8 +45,12 @@ return new class extends Migration
 
         // Collapse any new statuses before shrinking enum
         DB::table('trips')->whereIn('status', ['en_route', 'arrived'])->update(['status' => 'pending']);
+<<<<<<< HEAD
         if (DB::getDriverName() === 'mysql') {
             DB::statement("ALTER TABLE trips MODIFY COLUMN status ENUM('pending', 'in_progress', 'completed') NOT NULL");
         }
+=======
+        DB::statement("ALTER TABLE trips MODIFY COLUMN status ENUM('pending', 'in_progress', 'completed') NOT NULL");
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
     }
 };

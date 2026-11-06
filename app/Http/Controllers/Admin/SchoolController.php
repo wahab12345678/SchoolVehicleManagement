@@ -77,7 +77,32 @@ class SchoolController extends Controller
 
     public function store(Request $request)
     {
+<<<<<<< HEAD
         $validatedData = $this->validateSchool($request);
+=======
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:schools,email',
+            'phone' => 'required|string|max:20',
+            'address' => 'required|string',
+            'city' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
+            'country' => 'required|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'website' => 'nullable|url',
+            'description' => 'nullable|string',
+            'principal_name' => 'nullable|string|max:255',
+            'principal_email' => 'nullable|email',
+            'principal_phone' => 'nullable|string|max:20',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
+            'timezone' => 'nullable|string|max:64',
+            'pickup_lead_minutes' => 'nullable|integer|min:0|max:240',
+        ]);
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
 
         if ($request->hasFile('logo')) {
             $validatedData['logo'] = $request->file('logo')->store('schools/logos', 'public');

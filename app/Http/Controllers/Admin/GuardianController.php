@@ -27,7 +27,7 @@ class GuardianController extends Controller
             // Base query: guardians where the related user has role 'parent'
             $baseQuery = Guardian::with('user')->whereHas('user', function ($q) {
                 $q->whereHas('roles', function ($r) {
-                    $r->where('name', 'parent');
+                    $r->whereIn('name', ['parent', 'guardian']);
                 });
             });
 

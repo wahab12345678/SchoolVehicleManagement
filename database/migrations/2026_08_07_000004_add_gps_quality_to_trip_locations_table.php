@@ -15,12 +15,18 @@ return new class extends Migration
             $table->decimal('speed', 8, 2)->nullable()->after('heading');      // from device
         });
 
+<<<<<<< HEAD
         $indexExists = false;
         if (DB::getDriverName() === 'mysql') {
             $indexExists = collect(
                 DB::select("SHOW INDEX FROM trip_locations WHERE Key_name = 'trip_locations_trip_id_recorded_at_index'")
             )->isNotEmpty();
         }
+=======
+        $indexExists = collect(
+            DB::select("SHOW INDEX FROM trip_locations WHERE Key_name = 'trip_locations_trip_id_recorded_at_index'")
+        )->isNotEmpty();
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
 
         if (!$indexExists) {
             Schema::table('trip_locations', function (Blueprint $table) {
@@ -31,12 +37,18 @@ return new class extends Migration
 
     public function down(): void
     {
+<<<<<<< HEAD
         $indexExists = false;
         if (DB::getDriverName() === 'mysql') {
             $indexExists = collect(
                 DB::select("SHOW INDEX FROM trip_locations WHERE Key_name = 'trip_locations_trip_id_recorded_at_index'")
             )->isNotEmpty();
         }
+=======
+        $indexExists = collect(
+            DB::select("SHOW INDEX FROM trip_locations WHERE Key_name = 'trip_locations_trip_id_recorded_at_index'")
+        )->isNotEmpty();
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
 
         if ($indexExists) {
             Schema::table('trip_locations', function (Blueprint $table) {

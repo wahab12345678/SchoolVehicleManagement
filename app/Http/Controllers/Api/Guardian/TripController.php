@@ -7,7 +7,10 @@ use App\Http\Resources\Api\TripResource;
 use App\Models\Guardian;
 use App\Models\Student;
 use App\Models\Trip;
+<<<<<<< HEAD
 use App\Models\User;
+=======
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
 use Illuminate\Http\Request;
 
 class TripController extends Controller
@@ -16,6 +19,7 @@ class TripController extends Controller
     {
         $guardian = $this->guardianOrFail($request);
 
+<<<<<<< HEAD
         $students = $guardian->students()
             ->with(['school', 'trips' => function ($q) {
                 $q->active()->with(['vehicle.driver', 'route'])->latest()->limit(1);
@@ -23,6 +27,21 @@ class TripController extends Controller
             ->get()
             ->map(function (Student $student) {
                 $activeTrip = $student->trips->first();
+=======
+        $students = $guardian->students()->with('school')->get();
+
+        $activeTrips = Trip::query()
+            ->active()
+            ->whereIn('student_id', $students->pluck('id'))
+            ->with(['vehicle.driver', 'route'])
+            ->orderByDesc('id')
+            ->get()
+            ->unique('student_id')
+            ->keyBy('student_id');
+
+        $students = $students->map(function (Student $student) use ($activeTrips) {
+                $activeTrip = $activeTrips->get($student->id);
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
 
                 return [
                     'id' => $student->id,
@@ -83,7 +102,16 @@ class TripController extends Controller
         $this->authorizeTrip($guardian, $trip);
 
         $trip->loadMissing(['student.school', 'school']);
+<<<<<<< HEAD
         $location = $trip->locations()->latest('recorded_at')->first();
+=======
+        // reorder() clears any inherited order so we truly get the newest GPS point.
+        $location = $trip->locations()
+            ->reorder()
+            ->latest('recorded_at')
+            ->latest('id')
+            ->first();
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
         $school = $trip->school ?? $trip->student?->school;
 
         return response()->json([
@@ -128,12 +156,19 @@ class TripController extends Controller
         $this->authorizeTrip($guardian, $trip);
 
         $locations = $trip->locations()
+<<<<<<< HEAD
             ->orderBy('recorded_at')
+=======
+            ->reorder()
+            ->orderBy('recorded_at')
+            ->orderBy('id')
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
             ->get(['id', 'latitude', 'longitude', 'accuracy', 'heading', 'speed', 'recorded_at']);
 
         return response()->json(['data' => $locations]);
     }
 
+<<<<<<< HEAD
     /**
      * Register a new student under guardian with max 6 children and required school location.
      */
@@ -266,6 +301,8 @@ class TripController extends Controller
         ]);
     }
 
+=======
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
     private function guardianOrFail(Request $request): Guardian
     {
         $guardian = Guardian::where('user_id', $request->user()->id)->first();

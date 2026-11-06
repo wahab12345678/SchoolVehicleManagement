@@ -74,11 +74,19 @@ class TripNotificationService
         }
 
         $studentName = $trip->student?->name ?? 'your child';
+<<<<<<< HEAD
+=======
+        $destination = $trip->direction === 'from_school' ? 'home' : 'school';
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
 
         $this->notifyGuardian(
             $trip,
             'Trip completed',
+<<<<<<< HEAD
             "{$studentName} has reached school safely. Trip completed.",
+=======
+            "{$studentName} has reached {$destination} safely. Trip completed.",
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
             'completed'
         );
 

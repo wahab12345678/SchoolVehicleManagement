@@ -102,6 +102,7 @@
                                             <div class="mb-1 row">
                                                 <div class="col-sm-3">
                                                     <label class="col-form-label" for="school_id">School</label>
+<<<<<<< HEAD
                                                 </div>
                                                 <div class="col-sm-9">
                                                     <select id="school_id" name="school_id" class="form-select @error('school_id') is-invalid @enderror">
@@ -109,6 +110,36 @@
                                                         @if(isset($schools))
                                                             @foreach($schools as $school)
                                                                 <option value="{{ $school->id }}" {{ old('school_id', $student->school_id) == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
+                                                            @endforeach
+                                                        @endif
+                                                    </select>
+                                                    @error('school_id')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="mb-1 row">
+                                                <div class="col-sm-3">
+                                                    <label class="col-form-label" for="parent_id">Guardian</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <select id="parent_id" name="parent_id" class="form-select @error('parent_id') is-invalid @enderror">
+                                                        <option value="">-- Select Guardian --</option>
+                                                        @if(isset($guardians))
+                                                            @foreach($guardians as $g)
+                                                                <option value="{{ $g->id }}" {{ old('parent_id', $student->parent_id) == $g->id ? 'selected' : '' }}>{{ optional($g->user)->name ?? 'Guardian #'.$g->id }}</option>
+=======
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <select id="school_id" name="school_id" class="form-select @error('school_id') is-invalid @enderror">
+                                                        <option value="">-- Select School --</option>
+                                                        @if(isset($schools))
+                                                            @foreach($schools as $school)
+                                                                <option value="{{ $school->id }}" {{ old('school_id', $student->school_id) == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
+>>>>>>> bf416999db8681b6a737b848a02d55a444493b4d
                                                             @endforeach
                                                         @endif
                                                     </select>
@@ -140,33 +171,12 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-12">
-                                            <div class="mb-1 row">
-                                                <div class="col-sm-3">
-                                                    <label class="col-form-label">Location</label>
-                                                </div>
-                                                <div class="col-sm-9">
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <input type="number" step="any" id="latitude" class="form-control @error('latitude') is-invalid @enderror" name="latitude" placeholder="Latitude (e.g. 31.5204)" value="{{ old('latitude', $student->latitude) }}" />
-                                                            @error('latitude')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <input type="number" step="any" id="longitude" class="form-control @error('longitude') is-invalid @enderror" name="longitude" placeholder="Longitude (e.g. 74.3587)" value="{{ old('longitude', $student->longitude) }}" />
-                                                            @error('longitude')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="mt-2">
-                                                        <button type="button" class="btn btn-outline-secondary" id="btn-pick-location-edit">Pick on Map</button>
-                                                    </div>
-                                                    <small class="text-muted">Optional: Enter coordinates for student's home location or pick on map</small>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        @include('admin.partials.gps-location-picker', [
+                                            'title' => 'Student Home Location',
+                                            'help' => 'Student ke ghar ka location — manually type karo ya map pe click karo. Guardian app mein home pin yahan se aayega.',
+                                            'latitude' => old('latitude', $student->latitude),
+                                            'longitude' => old('longitude', $student->longitude),
+                                        ])
 
                                         <div class="col-sm-9 offset-sm-3">
                                             <button type="submit" class="btn btn-primary me-1">Update</button>
@@ -184,84 +194,8 @@
 </div>
 <!-- END: Content-->
 
-<!-- Pick Location Modal -->
-<div class="modal fade" id="pickLocationModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Pick Location</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="pickLocationMap"></div>
-                <div class="mt-2 small text-muted">Click on the map to set latitude/longitude.</div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @section('footer')
-<!-- Leaflet JavaScript -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-<style>
-    #pickLocationMap { width: 100%; height: 380px; }
-</style>
-
-<script>
-    // Map picking functionality
-    var map, marker, target;
-    
-    function ensureMap() {
-        if (typeof L === 'undefined') return false;
-        if (!map) {
-            map = L.map('pickLocationMap').setView([31.5204, 74.3587], 11);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-            map.on('click', function(e) {
-                var lat = e.latlng.lat.toFixed(6);
-                var lng = e.latlng.lng.toFixed(6);
-                if (target === 'add') {
-                    $('#latitude').val(lat);
-                    $('#longitude').val(lng);
-                } else if (target === 'edit') {
-                    $('#latitude').val(lat);
-                    $('#longitude').val(lng);
-                }
-                if (marker) marker.setLatLng(e.latlng); else marker = L.marker(e.latlng).addTo(map);
-            });
-        } else {
-            setTimeout(function(){ map.invalidateSize(); }, 200);
-        }
-        return true;
-    }
-
-    $('#btn-pick-location-add').on('click', function() {
-        target = 'add';
-        $('#pickLocationModal').modal('show');
-        setTimeout(ensureMap, 250);
-    });
-
-    $('#btn-pick-location-edit').on('click', function() {
-        target = 'edit';
-        $('#pickLocationModal').modal('show');
-        setTimeout(function(){
-            if (ensureMap()) {
-                var lat = parseFloat($('#latitude').val());
-                var lng = parseFloat($('#longitude').val());
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    var ll = L.latLng(lat, lng);
-                    if (marker) marker.setLatLng(ll); else marker = L.marker(ll).addTo(map);
-                    map.setView(ll, 13);
-                }
-            }
-        }, 250);
-    });
-</script>
+@include('admin.partials.gps-location-picker-scripts')
 @endsection

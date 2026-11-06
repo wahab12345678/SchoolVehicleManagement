@@ -146,12 +146,12 @@
                     <div class="mb-3 row">
                         <div class="col-md-6">
                             <label class="form-label" for="password">Password <span class="text-danger">*</span></label>
-                            <input type="password" name="password" id="password" class="form-control" aria-describedby="passwordHelp" placeholder="Enter password (min 6 chars)" minlength="6" required />
-                            <div class="invalid-feedback" id="passwordHelp">Password must be at least 6 characters.</div>
+                            <input type="password" name="password" id="password" class="form-control" aria-describedby="passwordHelp" placeholder="Enter password (min 8 chars)" minlength="8" required />
+                            <div class="invalid-feedback" id="passwordHelp">Password must be at least 8 characters.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="password_confirmation">Confirm Password <span class="text-danger">*</span></label>
-                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" aria-describedby="passwordConfirmHelp" placeholder="Confirm password" minlength="6" required />
+                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" aria-describedby="passwordConfirmHelp" placeholder="Confirm password" minlength="8" required />
                             <div class="invalid-feedback" id="passwordConfirmHelp">Passwords do not match.</div>
                         </div>
                     </div>
