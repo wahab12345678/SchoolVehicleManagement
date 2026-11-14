@@ -3,10 +3,10 @@
   "type": "module",
   "scripts": {
     "build": "node init && vite build",
-    "build:optimized": "vite build --mode production --minify",
-    "build:analyze": "vite build --mode production --analyze",
+    "build:optimized": "node init && vite build --mode production --minify",
+    "build:analyze": "node init && vite build --mode production --analyze",
     "dev": "node init && vite",
-    "dev:fast": "vite --force",
+    "dev:fast": "node init && vite --force",
     "preview": "vite preview",
     "optimize": "npm run build:optimized && npm run cache:clear",
     "cache:clear": "php artisan cache:clear && php artisan config:clear && php artisan route:clear && php artisan view:clear",

@@ -68,7 +68,7 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
-        if (!in_array($trip->status, ['en_route', 'pending'], true)) {
+        if ($trip->status !== 'en_route') {
             return $this->invalidTransition($trip, 'en_route');
         }
 
@@ -90,7 +90,7 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
-        if (!in_array($trip->status, ['arrived', 'en_route'], true)) {
+        if ($trip->status !== 'arrived') {
             return $this->invalidTransition($trip, 'arrived');
         }
 
@@ -114,7 +114,7 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
-        if (!in_array($trip->status, ['in_progress', 'arrived', 'en_route'], true)) {
+        if ($trip->status !== 'in_progress') {
             return $this->invalidTransition($trip, 'in_progress');
         }
 
