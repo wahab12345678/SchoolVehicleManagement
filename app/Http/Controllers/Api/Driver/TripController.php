@@ -17,16 +17,16 @@ class TripController extends Controller
 
     public function index(Request $request)
     {
-        $driverId = $request->user()->id;
+        $status = $request->query('status');
 
-        $query = Trip::with(['student', 'vehicle', 'route', 'driver', 'locations' => function ($q) {
-            $q->latest('recorded_at')->limit(1);
-        }])
-            ->where('driver_id', $driverId)
-            ->latest('id');
+        $query = Trip::with(['student', 'vehicle', 'route', 'driver'])
+            ->where('driver_id', $request->user()->id)
+            ->latest();
 
-        if ($request->has('status')) {
-            $query->where('status', $request->query('status'));
+        if ($status === 'active') {
+            $query->active();
+        } elseif ($status) {
+            $query->where('status', $status);
         }
 
         return TripResource::collection($query->paginate(20));
@@ -68,7 +68,7 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
-        if ($trip->status !== 'en_route') {
+        if (!in_array($trip->status, ['en_route', 'pending'], true)) {
             return $this->invalidTransition($trip, 'en_route');
         }
 
@@ -90,7 +90,7 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
-        if ($trip->status !== 'arrived') {
+        if (!in_array($trip->status, ['arrived', 'en_route'], true)) {
             return $this->invalidTransition($trip, 'arrived');
         }
 
@@ -114,7 +114,7 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
-        if ($trip->status !== 'in_progress') {
+        if (!in_array($trip->status, ['in_progress', 'arrived', 'en_route'], true)) {
             return $this->invalidTransition($trip, 'in_progress');
         }
 
@@ -164,13 +164,6 @@ class TripController extends Controller
             'recorded_at' => 'nullable|date',
         ])->validate();
 
-        $recordedAt = now();
-        if (!empty($data['recorded_at'])) {
-            $candidate = \Carbon\Carbon::parse($data['recorded_at']);
-            $withinWindow = $candidate->between(now()->subDay(), now()->addMinutes(2));
-            $recordedAt = $withinWindow ? $candidate : now();
-        }
-
         $location = TripLocation::create([
             'trip_id' => $trip->id,
             'latitude' => $data['latitude'],
@@ -178,7 +171,7 @@ class TripController extends Controller
             'accuracy' => $data['accuracy'] ?? null,
             'heading' => $data['heading'] ?? null,
             'speed' => $data['speed'] ?? null,
-            'recorded_at' => $recordedAt,
+            'recorded_at' => $data['recorded_at'] ?? now(),
         ]);
 
         return response()->json([
