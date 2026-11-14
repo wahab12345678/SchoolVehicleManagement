@@ -16,10 +16,20 @@ class GuardianDashboardController extends Controller
         // Get guardian's students
         $guardian = $user->guardian;
         if (!$guardian) {
-            return redirect()->route('admin.index')->with('error', 'Guardian profile not found.');
+            if ($user->hasRole('admin')) {
+                $students = Student::all();
+            } elseif ($user->hasAnyRole(['guardian', 'parent'])) {
+                $guardian = \App\Models\Guardian::firstOrCreate(
+                    ['user_id' => $user->id],
+                    ['address' => '']
+                );
+                $students = $guardian->students;
+            } else {
+                $students = collect();
+            }
+        } else {
+            $students = $guardian->students;
         }
-
-        $students = $guardian->students;
         
         // Get active trips for guardian's students
         $activeTrips = Trip::whereIn('student_id', $students->pluck('id'))

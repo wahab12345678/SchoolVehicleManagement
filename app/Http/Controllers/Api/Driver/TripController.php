@@ -17,16 +17,16 @@ class TripController extends Controller
 
     public function index(Request $request)
     {
-        $status = $request->query('status');
+        $driverId = $request->user()->id;
 
-        $query = Trip::with(['student', 'vehicle', 'route', 'driver'])
-            ->where('driver_id', $request->user()->id)
-            ->latest();
+        $query = Trip::with(['student', 'vehicle', 'route', 'driver', 'locations' => function ($q) {
+            $q->latest('recorded_at')->limit(1);
+        }])
+            ->where('driver_id', $driverId)
+            ->latest('id');
 
-        if ($status === 'active') {
-            $query->active();
-        } elseif ($status) {
-            $query->where('status', $status);
+        if ($request->has('status')) {
+            $query->where('status', $request->query('status'));
         }
 
         return TripResource::collection($query->paginate(20));

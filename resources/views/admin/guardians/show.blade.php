@@ -42,8 +42,9 @@
                                 <div class="row">
                                     <div class="col-xl-6 col-lg-12 d-flex flex-column justify-content-between border-container-lg">
                                         <div class="user-avatar-section">
-                                            <div class="d-flex justify-content-start">
-                                                <div class="d-flex flex-column ms-1">
+                                            <div class="d-flex justify-content-start align-items-center">
+                                                <img src="{{ $guardian->user->avatar_url }}" alt="{{ $guardian->user->name }}" class="round me-2" width="70" height="70" style="object-fit: cover; border: 2px solid #6366f1; border-radius: 50%;">
+                                                <div class="d-flex flex-column ms-50">
                                                     <div class="user-info mb-1">
                                                         <h4 class="mb-0">{{ $guardian->user->name }}</h4>
                                                         <span class="card-text">{{ $guardian->user->email }}</span>

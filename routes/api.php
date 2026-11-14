@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\Driver\TripController as DriverTripController;
 use App\Http\Controllers\Api\Guardian\TripController as GuardianTripController;
+use App\Http\Controllers\Api\TransportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -20,6 +21,11 @@ Route::prefix('v1')->group(function () {
         Route::post('/device-tokens', [DeviceTokenController::class, 'store']);
         Route::delete('/device-tokens', [DeviceTokenController::class, 'destroy']);
 
+        // General transport discovery endpoints
+        Route::get('/vehicles', [TransportController::class, 'vehicles']);
+        Route::get('/drivers', [TransportController::class, 'drivers']);
+        Route::get('/schools', [TransportController::class, 'schools']);
+
         Route::prefix('driver')->middleware('api.role:driver')->group(function () {
             Route::get('/trips', [DriverTripController::class, 'index']);
             Route::get('/trips/{trip}', [DriverTripController::class, 'show']);
@@ -32,6 +38,8 @@ Route::prefix('v1')->group(function () {
 
         Route::prefix('guardian')->middleware('api.role:guardian|parent')->group(function () {
             Route::get('/students', [GuardianTripController::class, 'students']);
+            Route::post('/students', [GuardianTripController::class, 'storeStudent']);
+            Route::post('/assign-driver', [GuardianTripController::class, 'assignDriver']);
             Route::get('/students/{student}/active-trip', [GuardianTripController::class, 'activeTrip']);
             Route::get('/trips/{trip}', [GuardianTripController::class, 'show']);
             Route::get('/trips/{trip}/realtime', [GuardianTripController::class, 'realtime']);
