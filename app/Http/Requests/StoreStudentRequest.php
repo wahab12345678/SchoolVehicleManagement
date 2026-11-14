@@ -33,6 +33,22 @@ class StoreStudentRequest extends FormRequest
         ];
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $parentId = $this->input('parent_id') ?? auth()->user()?->guardian?->id;
+            if ($parentId) {
+                $count = \App\Models\Student::where('parent_id', $parentId)->count();
+                if ($count >= 6) {
+                    $validator->errors()->add(
+                        'parent_id',
+                        'Child registration limit reached. A guardian profile can register a maximum of 6 children.'
+                    );
+                }
+            }
+        });
+    }
+
     public function messages()
     {
         return [
