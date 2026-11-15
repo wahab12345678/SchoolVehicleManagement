@@ -10,13 +10,51 @@
             </div>
         </div>
         <div class="content-body">
-            <!-- Welcome Message -->
+            <!-- Guardian Profile & Welcome Section -->
             <div class="row">
                 <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4>Welcome, {{ Auth::user()->name }}!</h4>
-                            <p class="text-muted">Track your children's transportation and stay updated with their trips.</p>
+                    <div class="card" style="border: 1px solid rgba(99, 102, 241, 0.15); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border-radius: 12px; overflow: hidden;">
+                        <div class="card-body p-2 p-md-3">
+                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="position-relative me-2 me-md-3">
+                                        <img src="{{ Auth::user()->avatar_url }}" 
+                                             alt="{{ Auth::user()->name }}" 
+                                             class="round user-avatar-image shadow-sm" 
+                                             width="72" 
+                                             height="72" 
+                                             style="object-fit: cover; border: 3px solid #6366f1; border-radius: 50%;" 
+                                             data-user-avatar>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-icon btn-primary rounded-circle position-absolute bottom-0 end-0 trigger-change-photo" 
+                                                title="Change Photo" 
+                                                style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4); border: 2px solid #ffffff;">
+                                            <i data-feather="camera" style="width: 14px; height: 14px;"></i>
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center flex-wrap gap-1 mb-25">
+                                            <h4 class="mb-0 fw-bolder" style="color: #1f2937;">{{ Auth::user()->name }}</h4>
+                                            <span class="badge badge-light-primary">Guardian</span>
+                                        </div>
+                                        <p class="text-muted small mb-25">
+                                            <span><i data-feather="mail" style="width: 12px; height: 12px;" class="me-25"></i>{{ Auth::user()->email }}</span>
+                                            @if(Auth::user()->phone)
+                                                <span class="ms-2"><i data-feather="phone" style="width: 12px; height: 12px;" class="me-25"></i>{{ Auth::user()->phone }}</span>
+                                            @endif
+                                        </p>
+                                        <p class="text-muted small mb-0">Track your children's transportation and stay updated with their trips.</p>
+                                    </div>
+                                </div>
+                                <div class="mt-2 mt-md-0 d-flex align-items-center gap-1">
+                                    <a href="{{ route('guardian.riders.index') }}" class="btn btn-primary btn-sm d-inline-flex align-items-center" style="border-radius: 8px;">
+                                        <i data-feather="search" class="me-50" style="width: 15px; height: 15px;"></i> Find a Rider
+                                    </a>
+                                    <button type="button" class="btn btn-outline-primary btn-sm trigger-change-photo d-inline-flex align-items-center" style="border-radius: 8px;">
+                                        <i data-feather="camera" class="me-50" style="width: 15px; height: 15px;"></i> Change Photo
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -26,8 +64,11 @@
             <div class="row">
                 <div class="col-12">
                     <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">My Children</h4>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4 class="card-title mb-0">My Children</h4>
+                            <a href="{{ route('guardian.riders.index') }}" class="btn btn-sm btn-outline-primary">
+                                <i data-feather="search" class="me-25"></i> Find / Change Driver
+                            </a>
                         </div>
                         <div class="card-body">
                             @if($students->count() > 0)
@@ -40,18 +81,30 @@
                                                 <p class="card-text">
                                                     <strong>Roll Number:</strong> {{ $student->roll_number }}<br>
                                                     <strong>Class:</strong> {{ $student->class ?? 'Not specified' }}<br>
+                                                    <strong>Assigned Rider:</strong> 
+                                                    @if($student->driver)
+                                                        <span class="text-success fw-bold">{{ $student->driver->name }}</span>
+                                                    @else
+                                                        <span class="text-danger">None</span>
+                                                    @endif
+                                                    <br>
                                                     <strong>Location:</strong> 
                                                     @if($student->latitude && $student->longitude)
-                                                        <a href="https://www.google.com/maps?q={{ $student->latitude }},{{ $student->longitude }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                            <i data-feather="map-pin"></i> View on Map
+                                                        <a href="https://www.google.com/maps?q={{ $student->latitude }},{{ $student->longitude }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-50" style="font-size: 0.75rem;">
+                                                            <i data-feather="map-pin"></i> View
                                                         </a>
                                                     @else
                                                         Not set
                                                     @endif
                                                 </p>
-                                                <a href="{{ route('guardian.tracking.index') }}" class="btn btn-primary btn-sm">
-                                                    <i data-feather="navigation"></i> Track Trips
-                                                </a>
+                                                <div class="d-flex gap-1 flex-wrap">
+                                                    <a href="{{ route('guardian.tracking.index') }}" class="btn btn-primary btn-sm">
+                                                        <i data-feather="navigation"></i> Track Trips
+                                                    </a>
+                                                    <a href="{{ route('guardian.riders.index') }}" class="btn btn-outline-primary btn-sm">
+                                                        <i data-feather="user-plus"></i> {{ $student->driver ? 'Change Rider' : 'Find Rider' }}
+                                                    </a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

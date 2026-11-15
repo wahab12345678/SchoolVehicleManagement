@@ -4,6 +4,7 @@ namespace App\Repositories;
 use App\Models\Guardian;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class GuardianRepository
 {
@@ -28,7 +29,9 @@ class GuardianRepository
             'password' => Hash::make($plainPassword),
         ]);
 
-        $user->assignRole('parent'); // spatie role
+        Role::findOrCreate('guardian');
+        Role::findOrCreate('parent');
+        $user->assignRole(['guardian', 'parent']);
 
         // Create Guardian
         $guardian = Guardian::create([
@@ -43,11 +46,17 @@ class GuardianRepository
 
     public function update(Guardian $guardian, array $data)
     {
-        $guardian->user->update([
+        $userData = [
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => isset($data['phone']) ? $this->normalizePhone($data['phone']) : null,
-        ]);
+        ];
+
+        if (!empty($data['password'])) {
+            $userData['password'] = $data['password'];
+        }
+
+        $guardian->user->update($userData);
 
         $guardian->update([
             'cnic' => $data['cnic'] ?? null,

@@ -10,6 +10,7 @@ class Vehicle extends Model
         'number_plate',
         'model',
         'type',
+        'capacity',
         'driver_id',
         'school_id',
         'is_available',
@@ -17,9 +18,53 @@ class Vehicle extends Model
         'notes'
     ];
 
+    public function getCapacityAttribute($value)
+    {
+        $type = strtolower($this->type ?? '');
+
+        // Cars are strictly capped at maximum 5 passengers
+        if ($type === 'car') {
+            $configured = !empty($value) ? (int) $value : 5;
+            return min($configured, 5);
+        }
+
+        if (!empty($value)) {
+            return (int) $value;
+        }
+
+        return match ($type) {
+            'rickshaw' => 4,
+            'van' => 14,
+            'bus' => 30,
+            default => 10,
+        };
+    }
+
+    public function getEffectiveCapacityAttribute(): int
+    {
+        return $this->capacity;
+    }
+
+    public function getAssignedStudentsCountAttribute(): int
+    {
+        return $this->driver_id
+            ? Student::where('driver_id', $this->driver_id)->count()
+            : 0;
+    }
+
+    public function getAvailableSeatsAttribute(): int
+    {
+        return max(0, $this->capacity - $this->assigned_students_count);
+    }
+
+    public function getIsFullAttribute(): bool
+    {
+        return $this->assigned_students_count >= $this->capacity;
+    }
+
     public function driver()
     {
-        return $this->belongsTo(User::class, 'driver_id');
+        return $this->belongsTo(Driver::class, 'driver_id');
     }
 
     public function school()
@@ -34,7 +79,7 @@ class Vehicle extends Model
 
     public function activeTrips()
     {
-        return $this->hasMany(Trip::class)->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress']);
+        return $this->hasMany(Trip::class)->whereIn('status', Trip::ACTIVE_STATUSES);
     }
 
     public function getIsAvailableAttribute()

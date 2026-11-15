@@ -32,7 +32,7 @@ class SyncVehicleAvailability extends Command
         
         foreach ($vehicles as $vehicle) {
             $hasActiveTrips = $vehicle->trips()
-                ->whereIn('status', ['pending', 'in_progress'])
+                ->whereIn('status', \App\Models\Trip::ACTIVE_STATUSES)
                 ->exists();
             
             $vehicle->update(['is_available' => !$hasActiveTrips]);

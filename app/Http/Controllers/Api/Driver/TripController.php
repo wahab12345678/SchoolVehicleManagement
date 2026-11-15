@@ -17,16 +17,16 @@ class TripController extends Controller
 
     public function index(Request $request)
     {
-        $status = $request->query('status');
+        $driverId = $request->user()->id;
 
-        $query = Trip::with(['student', 'vehicle', 'route', 'driver'])
-            ->where('driver_id', $request->user()->id)
-            ->latest();
+        $query = Trip::with(['student', 'vehicle', 'route', 'driver', 'locations' => function ($q) {
+            $q->latest('recorded_at')->limit(1);
+        }])
+            ->where('driver_id', $driverId)
+            ->latest('id');
 
-        if ($status === 'active') {
-            $query->active();
-        } elseif ($status) {
-            $query->where('status', $status);
+        if ($request->has('status')) {
+            $query->where('status', $request->query('status'));
         }
 
         return TripResource::collection($query->paginate(20));
@@ -68,7 +68,7 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
-        if (!in_array($trip->status, ['en_route', 'pending'], true)) {
+        if ($trip->status !== 'en_route') {
             return $this->invalidTransition($trip, 'en_route');
         }
 
@@ -90,7 +90,7 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
-        if (!in_array($trip->status, ['arrived', 'en_route'], true)) {
+        if ($trip->status !== 'arrived') {
             return $this->invalidTransition($trip, 'arrived');
         }
 
@@ -114,7 +114,7 @@ class TripController extends Controller
     {
         $this->authorizeDriver($request, $trip);
 
-        if (!in_array($trip->status, ['in_progress', 'arrived', 'en_route'], true)) {
+        if ($trip->status !== 'in_progress') {
             return $this->invalidTransition($trip, 'in_progress');
         }
 
@@ -143,14 +143,33 @@ class TripController extends Controller
             ], 422);
         }
 
-        $data = $request->validate([
+        $input = $request->all();
+        // Mobile GPS often sends heading=-1 when unavailable.
+        if (isset($input['heading']) && (!is_numeric($input['heading']) || $input['heading'] < 0 || $input['heading'] > 360)) {
+            unset($input['heading']);
+        }
+        if (isset($input['speed']) && (!is_numeric($input['speed']) || $input['speed'] < 0)) {
+            unset($input['speed']);
+        }
+        if (isset($input['accuracy']) && (!is_numeric($input['accuracy']) || $input['accuracy'] < 0)) {
+            unset($input['accuracy']);
+        }
+
+        $data = validator($input, [
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'nullable|numeric|min:0',
             'heading' => 'nullable|numeric|between:0,360',
             'speed' => 'nullable|numeric|min:0',
             'recorded_at' => 'nullable|date',
-        ]);
+        ])->validate();
+
+        $recordedAt = now();
+        if (!empty($data['recorded_at'])) {
+            $candidate = \Carbon\Carbon::parse($data['recorded_at']);
+            $withinWindow = $candidate->between(now()->subDay(), now()->addMinutes(2));
+            $recordedAt = $withinWindow ? $candidate : now();
+        }
 
         $location = TripLocation::create([
             'trip_id' => $trip->id,
@@ -159,7 +178,7 @@ class TripController extends Controller
             'accuracy' => $data['accuracy'] ?? null,
             'heading' => $data['heading'] ?? null,
             'speed' => $data['speed'] ?? null,
-            'recorded_at' => $data['recorded_at'] ?? now(),
+            'recorded_at' => $recordedAt,
         ]);
 
         return response()->json([

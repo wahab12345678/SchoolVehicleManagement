@@ -13,6 +13,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->environment('production')) {
+            throw new \RuntimeException('Refusing to run demo seeders in production.');
+        }
+
         // run the InitialSetupSeeder
         $this->call(InitialSetupSeeder::class);
         

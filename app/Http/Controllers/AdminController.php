@@ -26,7 +26,7 @@ class AdminController extends Controller
             'total_drivers' => \App\Models\User::role('driver')->count(),
             'total_routes' => \App\Models\Route::count(),
             'total_trips' => \App\Models\Trip::count(),
-            'active_trips' => \App\Models\Trip::whereIn('status', ['pending', 'in_progress'])->count(),
+            'active_trips' => \App\Models\Trip::whereIn('status', \App\Models\Trip::ACTIVE_STATUSES)->count(),
             'completed_trips' => \App\Models\Trip::where('status', 'completed')->count(),
         ];
 
@@ -38,7 +38,7 @@ class AdminController extends Controller
 
         // Get active trips for real-time tracking
         $active_trips = \App\Models\Trip::with(['student', 'vehicle', 'route'])
-            ->whereIn('status', ['pending', 'in_progress'])
+            ->whereIn('status', \App\Models\Trip::ACTIVE_STATUSES)
             ->orderBy('created_at', 'desc')
             ->get();
 

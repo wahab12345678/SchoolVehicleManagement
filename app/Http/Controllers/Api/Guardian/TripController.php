@@ -7,6 +7,7 @@ use App\Http\Resources\Api\TripResource;
 use App\Models\Guardian;
 use App\Models\Student;
 use App\Models\Trip;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class TripController extends Controller
@@ -15,31 +16,37 @@ class TripController extends Controller
     {
         $guardian = $this->guardianOrFail($request);
 
-        $students = $guardian->students()
-            ->with(['school', 'trips' => function ($q) {
-                $q->active()->with(['vehicle.driver', 'route'])->latest()->limit(1);
-            }])
-            ->get()
-            ->map(function (Student $student) {
-                $activeTrip = $student->trips->first();
+        $students = $guardian->students()->with('school')->get();
 
-                return [
-                    'id' => $student->id,
-                    'name' => $student->name,
-                    'roll_number' => $student->roll_number,
-                    'class' => $student->class,
-                    'latitude' => $student->latitude,
-                    'longitude' => $student->longitude,
-                    'school' => $student->school ? [
-                        'id' => $student->school->id,
-                        'name' => $student->school->name,
-                        'start_time' => $student->school->start_time,
-                        'end_time' => $student->school->end_time,
-                        'pickup_lead_minutes' => $student->school->pickup_lead_minutes,
-                    ] : null,
-                    'active_trip' => $activeTrip ? new TripResource($activeTrip) : null,
-                ];
-            });
+        $activeTrips = Trip::query()
+            ->active()
+            ->whereIn('student_id', $students->pluck('id'))
+            ->with(['vehicle.driver', 'route'])
+            ->orderByDesc('id')
+            ->get()
+            ->unique('student_id')
+            ->keyBy('student_id');
+
+        $students = $students->map(function (Student $student) use ($activeTrips) {
+            $activeTrip = $activeTrips->get($student->id);
+
+            return [
+                'id' => $student->id,
+                'name' => $student->name,
+                'roll_number' => $student->roll_number,
+                'class' => $student->class,
+                'latitude' => $student->latitude,
+                'longitude' => $student->longitude,
+                'school' => $student->school ? [
+                    'id' => $student->school->id,
+                    'name' => $student->school->name,
+                    'start_time' => $student->school->start_time,
+                    'end_time' => $student->school->end_time,
+                    'pickup_lead_minutes' => $student->school->pickup_lead_minutes,
+                ] : null,
+                'active_trip' => $activeTrip ? new TripResource($activeTrip) : null,
+            ];
+        });
 
         return response()->json(['data' => $students]);
     }
@@ -82,7 +89,12 @@ class TripController extends Controller
         $this->authorizeTrip($guardian, $trip);
 
         $trip->loadMissing(['student.school', 'school']);
-        $location = $trip->locations()->latest('recorded_at')->first();
+        // reorder() clears any inherited order so we truly get the newest GPS point.
+        $location = $trip->locations()
+            ->reorder()
+            ->latest('recorded_at')
+            ->latest('id')
+            ->first();
         $school = $trip->school ?? $trip->student?->school;
 
         return response()->json([
@@ -127,10 +139,144 @@ class TripController extends Controller
         $this->authorizeTrip($guardian, $trip);
 
         $locations = $trip->locations()
+            ->reorder()
             ->orderBy('recorded_at')
+            ->orderBy('id')
             ->get(['id', 'latitude', 'longitude', 'accuracy', 'heading', 'speed', 'recorded_at']);
 
         return response()->json(['data' => $locations]);
+    }
+
+    /**
+     * Register a new student under guardian with max 6 children and required school location.
+     */
+    public function storeStudent(Request $request)
+    {
+        $guardian = $this->guardianOrFail($request);
+
+        // 1. Strict Guardian Child Limit Constraint (Max 6 children)
+        if ($guardian->students()->count() >= 6) {
+            return response()->json([
+                'message' => 'Child registration limit reached. A guardian profile can register a maximum of 6 children.',
+                'errors' => [
+                    'student_limit' => ['A guardian profile can register a maximum of 6 children.']
+                ]
+            ], 422);
+        }
+
+        // 2. Validate input with mandatory school location and verified GPS coordinates
+        $validated = $request->validate([
+            'name' => 'required|string|min:2|max:255',
+            'class' => 'required|string|max:50',
+            'roll_number' => 'nullable|string|max:50',
+            'school_id' => 'required|integer|exists:schools,id',
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+            'driver_id' => 'nullable|integer|exists:users,id',
+        ]);
+
+        // 3. Dynamic Vehicle Capacity Validation (if a driver is selected)
+        if (!empty($validated['driver_id'])) {
+            $driver = User::role('driver')->with('vehicles')->find($validated['driver_id']);
+            $vehicle = $driver?->vehicles->first();
+            if ($vehicle) {
+                $currentOccupancy = Student::where('driver_id', $driver->id)->count();
+                $maxCapacity = $vehicle->capacity; // Car is strictly capped at max 5
+                if ($currentOccupancy >= $maxCapacity) {
+                    $typeLabel = ucfirst($vehicle->type ?? 'Vehicle');
+                    return response()->json([
+                        'message' => "Capacity limit reached! This {$typeLabel} cannot exceed {$maxCapacity} passengers ({$currentOccupancy}/{$maxCapacity} occupied).",
+                        'errors' => [
+                            'driver_id' => ["Vehicle seat capacity exceeded."]
+                        ]
+                    ], 422);
+                }
+            }
+        }
+
+        $rollNumber = !empty($validated['roll_number']) 
+            ? $validated['roll_number'] 
+            : ('RN-' . strtoupper(\Illuminate\Support\Str::random(6)));
+
+        $student = Student::create([
+            'name' => $validated['name'],
+            'class' => $validated['class'],
+            'roll_number' => $rollNumber,
+            'parent_id' => $guardian->id,
+            'school_id' => $validated['school_id'],
+            'latitude' => $validated['latitude'],
+            'longitude' => $validated['longitude'],
+            'driver_id' => $validated['driver_id'] ?? null,
+        ]);
+
+        $student->load('school');
+
+        return response()->json([
+            'message' => 'Child student successfully registered.',
+            'data' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'class' => $student->class,
+                'roll_number' => $student->roll_number,
+                'latitude' => (float) $student->latitude,
+                'longitude' => (float) $student->longitude,
+                'school' => $student->school ? [
+                    'id' => $student->school->id,
+                    'name' => $student->school->name,
+                    'address' => $student->school->address,
+                ] : null,
+                'active_trip' => null,
+            ]
+        ], 201);
+    }
+
+    /**
+     * Assign driver/vehicle to a student with dynamic vehicle capacity limits.
+     */
+    public function assignDriver(Request $request)
+    {
+        $guardian = $this->guardianOrFail($request);
+
+        $validated = $request->validate([
+            'student_id' => 'required|integer|exists:students,id',
+            'driver_id' => 'required|integer|exists:users,id',
+        ]);
+
+        $student = Student::findOrFail($validated['student_id']);
+        $this->authorizeStudent($guardian, $student);
+
+        $driver = User::role('driver')->with('vehicles')->findOrFail($validated['driver_id']);
+        $vehicle = $driver->vehicles->first();
+
+        // Enforce dynamic vehicle capacity limit (Car max 5, etc.)
+        if ($vehicle) {
+            $currentOccupancy = Student::where('driver_id', $driver->id)->count();
+            $maxCapacity = $vehicle->capacity;
+            if ($currentOccupancy >= $maxCapacity) {
+                $typeLabel = ucfirst($vehicle->type ?? 'Vehicle');
+                return response()->json([
+                    'message' => "Capacity limit reached! This {$typeLabel} cannot exceed {$maxCapacity} passengers ({$currentOccupancy}/{$maxCapacity} occupied).",
+                    'errors' => [
+                        'driver_id' => ["Vehicle seat capacity exceeded."]
+                    ]
+                ], 422);
+            }
+        }
+
+        $student->driver_id = $driver->id;
+        $student->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Driver {$driver->name} successfully assigned to {$student->name}.",
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'driver_id' => $driver->id,
+                'driver_name' => $driver->name,
+                'vehicle_plate' => $vehicle?->number_plate ?? 'N/A',
+            ]
+        ]);
     }
 
     private function guardianOrFail(Request $request): Guardian

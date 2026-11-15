@@ -12,6 +12,7 @@ class Student extends Model
         'class',
         'parent_id',
         'school_id',
+        'driver_id',
         'latitude',
         'longitude',
     ];
@@ -19,6 +20,11 @@ class Student extends Model
     public function guardian()
     {
         return $this->belongsTo(Guardian::class, 'parent_id');
+    }
+
+    public function driver()
+    {
+        return $this->belongsTo(Driver::class, 'driver_id');
     }
 
     public function school()
@@ -33,7 +39,7 @@ class Student extends Model
 
     public function activeTrips()
     {
-        return $this->hasMany(Trip::class)->whereIn('status', ['pending', 'en_route', 'arrived', 'in_progress']);
+        return $this->hasMany(Trip::class)->whereIn('status', Trip::ACTIVE_STATUSES);
     }
 
     public function completedTrips()
