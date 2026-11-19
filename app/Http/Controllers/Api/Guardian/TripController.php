@@ -16,7 +16,7 @@ class TripController extends Controller
     {
         $guardian = $this->guardianOrFail($request);
 
-        $students = $guardian->students()->with('school')->get();
+        $students = $guardian->students()->with(['school', 'driver'])->get();
 
         $activeTrips = Trip::query()
             ->active()
@@ -29,6 +29,7 @@ class TripController extends Controller
 
         $students = $students->map(function (Student $student) use ($activeTrips) {
             $activeTrip = $activeTrips->get($student->id);
+            $driver = $activeTrip?->vehicle?->driver ?? $student->driver;
 
             return [
                 'id' => $student->id,
@@ -37,6 +38,12 @@ class TripController extends Controller
                 'class' => $student->class,
                 'latitude' => $student->latitude,
                 'longitude' => $student->longitude,
+                'driver_id' => $driver?->id ?? $student->driver_id,
+                'driver' => $driver ? [
+                    'id' => $driver->id,
+                    'name' => $driver->name,
+                    'phone' => $driver->phone,
+                ] : null,
                 'school' => $student->school ? [
                     'id' => $student->school->id,
                     'name' => $student->school->name,

@@ -24,6 +24,9 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'cnic',
+        'license_number',
+        'address',
         'avatar',
     ];
 
@@ -92,6 +95,16 @@ class User extends Authenticatable
     public function activeServiceAreas()
     {
         return $this->hasMany(DriverServiceArea::class, 'driver_id')->where('is_active', true);
+    }
+
+    public function receivedGuardianMessages()
+    {
+        return $this->hasMany(GuardianDriverMessage::class, 'driver_id');
+    }
+
+    public function sentGuardianMessages()
+    {
+        return $this->hasMany(GuardianDriverMessage::class, 'guardian_user_id');
     }
 
     public function primaryVehicle()

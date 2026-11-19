@@ -22,36 +22,124 @@
         </div>
         <div class="content-body">
             <section id="page-account-settings">
+                {{-- Vehicle Type Display Banner at Top --}}
+                <div class="row mb-2">
+                    <div class="col-12">
+                        @php
+                            $primaryVehicle = $driver->vehicles->first();
+                            $vType = strtolower($primaryVehicle->type ?? '');
+                            $typeBadgeClass = match($vType) {
+                                'bus' => 'bg-warning text-dark',
+                                'van' => 'bg-info text-white',
+                                'rickshaw' => 'bg-success text-white',
+                                'car' => 'bg-primary text-white',
+                                default => 'bg-secondary text-white'
+                            };
+                            $typeIcon = match($vType) {
+                                'bus' => 'fa-bus',
+                                'van' => 'fa-shuttle-van',
+                                'rickshaw' => 'fa-motorcycle',
+                                'car' => 'fa-car',
+                                default => 'fa-truck'
+                            };
+                        @endphp
+                        <div class="card border-0 shadow-sm" style="border-radius: 14px; background: linear-gradient(135deg, #102A43 0%, #1B4D5C 50%, #0F766E 100%); color: #fff;">
+                            <div class="card-body p-3 d-flex align-items-center justify-content-between flex-wrap">
+                                <div class="d-flex align-items-center mb-1 mb-md-0">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 58px; height: 58px; background: rgba(255,255,255,0.18);">
+                                        <i class="fas {{ $typeIcon }} fa-2x text-white"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-white-50 text-uppercase small fw-bold tracking-wider">Assigned Vehicle Type</div>
+                                        <h3 class="text-white mb-0 fw-bold">
+                                            @if($primaryVehicle)
+                                                <span class="badge {{ $typeBadgeClass }} me-2 text-uppercase">{{ $primaryVehicle->type }}</span>
+                                                <span>{{ $primaryVehicle->model }} ({{ $primaryVehicle->number_plate }})</span>
+                                            @else
+                                                <span class="badge bg-secondary">No Vehicle Assigned</span>
+                                            @endif
+                                        </h3>
+                                    </div>
+                                </div>
+                                @if($primaryVehicle)
+                                    <div class="text-md-end mt-2 mt-md-0">
+                                        <span class="badge bg-light text-dark px-3 py-2 fw-bold" style="font-size: 0.9rem;">
+                                            Capacity: {{ $primaryVehicle->capacity }} Seats
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row">
                     <div class="col-md-8">
-                        <div class="card">
+                        <div class="card shadow-sm" style="border-radius: 14px;">
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-12">
-                                        <h5>Driver Information</h5>
-                                        <div class="mt-1">
-                                            <p><strong>Name:</strong> {{ $driver->name }}</p>
-                                            <p><strong>Email:</strong> {{ $driver->email }}</p>
-                                            <p><strong>Phone:</strong> {{ $driver->phone ?? 'Not provided' }}</p>
-                                            <p><strong>Role:</strong> <span class="badge badge-primary">Driver</span></p>
-                                            <p><strong>Assigned Vehicles:</strong> {{ $driver->vehicles->count() }}</p>
-                                            <p><strong>Total Trips:</strong> {{ $driver->trips->count() }}</p>
-                                            <p><strong>Active Trips:</strong> 
-                                                @php
-                                                    $activeTrips = $driver->vehicles()->whereHas('activeTrips')->count();
-                                                @endphp
-                                                @if($activeTrips > 0)
-                                                    <span class="badge badge-warning">{{ $activeTrips }} Active</span>
-                                                @else
-                                                    <span class="badge badge-success">Available</span>
-                                                @endif
-                                            </p>
+                                        <h5 class="fw-bold mb-3" style="color: #102A43;">Driver Profile Information</h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-borderless">
+                                                <tbody>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted" style="width: 220px;">Full Name:</th>
+                                                        <td class="fw-bold text-dark">{{ $driver->name }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">CNIC Number:</th>
+                                                        <td><span class="badge bg-light text-dark px-2 py-1 border">{{ $driver->cnic ?? 'Not provided' }}</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">Phone Number:</th>
+                                                        <td class="fw-semibold">{{ $driver->phone ?? 'Not provided' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">License Number:</th>
+                                                        <td><span class="badge bg-light text-primary px-2 py-1 border">{{ $driver->license_number ?? 'Not provided' }}</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">House / Home Location:</th>
+                                                        <td class="text-dark">{{ $driver->address ?? 'Not provided' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">Email Address:</th>
+                                                        <td>{{ $driver->email }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">Role:</th>
+                                                        <td><span class="badge bg-primary">Driver</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">Assigned Vehicles:</th>
+                                                        <td>{{ $driver->vehicles->count() }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">Total Trips:</th>
+                                                        <td>{{ $driver->trips->count() }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">Status:</th>
+                                                        <td>
+                                                            @php
+                                                                $activeTrips = $driver->vehicles()->whereHas('activeTrips')->count();
+                                                            @endphp
+                                                            @if($activeTrips > 0)
+                                                                <span class="badge bg-warning">{{ $activeTrips }} Active</span>
+                                                            @else
+                                                                <span class="badge bg-success">Available</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="mt-3">
-                                    <a href="{{ route('admin.drivers.edit', $driver->id) }}" class="btn btn-primary">Edit Driver</a>
-                                    <a href="{{ route('admin.drivers.index') }}" class="btn btn-outline-secondary">Back to List</a>
+                                    <a href="{{ route('admin.drivers.edit', $driver->id) }}" class="btn btn-primary px-3">Edit Driver</a>
+                                    <a href="{{ route('admin.drivers.index') }}" class="btn btn-outline-secondary px-3">Back to List</a>
                                 </div>
                             </div>
                         </div>

@@ -109,6 +109,9 @@ class DriverController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'phone' => 'nullable|string|max:20',
+            'cnic' => 'nullable|string|max:30',
+            'license_number' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:255',
             'password' => 'required|string|min:8|confirmed',
             'vehicle_id' => 'nullable|exists:vehicles,id',
         ]);
@@ -117,6 +120,9 @@ class DriverController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
+            'cnic' => $request->cnic,
+            'license_number' => $request->license_number,
+            'address' => $request->address,
             'password' => Hash::make($request->password),
         ]);
 
@@ -177,6 +183,9 @@ class DriverController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $driver->id,
             'phone' => 'nullable|string|max:20',
+            'cnic' => 'nullable|string|max:30',
+            'license_number' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:255',
             'password' => 'nullable|string|min:8|confirmed',
             'vehicle_ids' => 'nullable|array',
             'vehicle_ids.*' => 'exists:vehicles,id',
@@ -186,6 +195,9 @@ class DriverController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
+            'cnic' => $request->cnic,
+            'license_number' => $request->license_number,
+            'address' => $request->address,
         ];
 
         // Only update password if provided

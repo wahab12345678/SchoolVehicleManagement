@@ -46,13 +46,7 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'token_type' => 'Bearer',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'roles' => $user->getRoleNames(),
-            ],
+            'user' => $this->formatUserData($user),
         ]);
     }
 
@@ -60,18 +54,49 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        return response()->json([
+        return response()->json($this->formatUserData($user));
+    }
+
+    protected function formatUserData(User $user): array
+    {
+        $primaryVehicle = $user->vehicles()->first() ?? $user->primaryVehicle;
+        $vehicleData = null;
+
+        if ($primaryVehicle) {
+            $assignedCount = \App\Models\Student::where('driver_id', $user->id)->count();
+            $effectiveCap = $primaryVehicle->capacity;
+            $availableSeats = max(0, $effectiveCap - $assignedCount);
+
+            $vehicleData = [
+                'id' => $primaryVehicle->id,
+                'number_plate' => $primaryVehicle->number_plate,
+                'model' => $primaryVehicle->model ?? 'Standard',
+                'type' => strtolower($primaryVehicle->type ?? 'van'),
+                'capacity' => $effectiveCap,
+                'assigned_students_count' => $assignedCount,
+                'available_seats' => $availableSeats,
+                'is_available' => $availableSeats > 0,
+                'status' => $primaryVehicle->status ?? 'active',
+            ];
+        }
+
+        return [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
+            'cnic' => $user->cnic,
+            'license_number' => $user->license_number,
+            'address' => $user->address,
             'roles' => $user->getRoleNames(),
+            'vehicle' => $vehicleData,
+            'primary_vehicle' => $vehicleData,
             'guardian' => $user->guardian ? [
                 'id' => $user->guardian->id,
                 'cnic' => $user->guardian->cnic,
                 'address' => $user->guardian->address,
             ] : null,
-        ]);
+        ];
     }
 
     public function logout(Request $request)
