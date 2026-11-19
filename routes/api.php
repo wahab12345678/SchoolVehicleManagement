@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeviceTokenController;
+use App\Http\Controllers\Api\Driver\NotificationController as DriverNotificationController;
+use App\Http\Controllers\Api\Driver\ProfileController as DriverProfileController;
 use App\Http\Controllers\Api\Driver\TripController as DriverTripController;
+use App\Http\Controllers\Api\Guardian\MessageController as GuardianMessageController;
 use App\Http\Controllers\Api\Guardian\TripController as GuardianTripController;
 use App\Http\Controllers\Api\TransportController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +30,14 @@ Route::prefix('v1')->group(function () {
         Route::get('/schools', [TransportController::class, 'schools']);
 
         Route::prefix('driver')->middleware('api.role:driver')->group(function () {
+            Route::get('/notifications', [DriverNotificationController::class, 'index']);
+            Route::post('/notifications/{id}/read', [DriverNotificationController::class, 'markAsRead']);
+            Route::put('/notifications/{id}/read', [DriverNotificationController::class, 'markAsRead']);
+            Route::post('/notifications/mark-all-read', [DriverNotificationController::class, 'markAllRead']);
+            Route::post('/notifications/{id}/acknowledge', [DriverNotificationController::class, 'acknowledge']);
+            Route::get('/profile', [DriverProfileController::class, 'show']);
+            Route::put('/profile', [DriverProfileController::class, 'update']);
+            Route::post('/profile', [DriverProfileController::class, 'update']);
             Route::get('/trips', [DriverTripController::class, 'index']);
             Route::get('/trips/{trip}', [DriverTripController::class, 'show']);
             Route::post('/trips/{trip}/start-pickup', [DriverTripController::class, 'startPickup']);
@@ -37,6 +48,7 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::prefix('guardian')->middleware('api.role:guardian|parent')->group(function () {
+            Route::post('/messages', [GuardianMessageController::class, 'store']);
             Route::get('/students', [GuardianTripController::class, 'students']);
             Route::post('/students', [GuardianTripController::class, 'storeStudent']);
             Route::post('/assign-driver', [GuardianTripController::class, 'assignDriver']);

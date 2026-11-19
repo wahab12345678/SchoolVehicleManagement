@@ -81,6 +81,48 @@
                                         <div class="col-12">
                                             <div class="mb-1 row">
                                                 <div class="col-sm-3">
+                                                    <label class="col-form-label" for="cnic">CNIC Number</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="text" id="cnic" class="form-control @error('cnic') is-invalid @enderror" name="cnic" placeholder="e.g. 35201-1234567-1" value="{{ old('cnic') }}" />
+                                                    @error('cnic')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="mb-1 row">
+                                                <div class="col-sm-3">
+                                                    <label class="col-form-label" for="license_number">License Number</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="text" id="license_number" class="form-control @error('license_number') is-invalid @enderror" name="license_number" placeholder="e.g. DL-2024-9843" value="{{ old('license_number') }}" />
+                                                    @error('license_number')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="mb-1 row">
+                                                <div class="col-sm-3">
+                                                    <label class="col-form-label" for="address">House / Home Location</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="text" id="address" class="form-control @error('address') is-invalid @enderror" name="address" placeholder="Driver Home Address" value="{{ old('address') }}" />
+                                                    @error('address')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="mb-1 row">
+                                                <div class="col-sm-3">
                                                     <label class="col-form-label" for="password">Password</label>
                                                 </div>
                                                 <div class="col-sm-9">
